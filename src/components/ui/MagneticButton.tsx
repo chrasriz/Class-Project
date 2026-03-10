@@ -47,14 +47,18 @@ export function MagneticButton({
       ref={ref}
       onMouseMove={handleMouse}
       onMouseLeave={reset}
+      onTouchStart={reset}
       animate={{ x: position.x, y: position.y }}
       transition={{ type: "spring", stiffness: 200, damping: 15 }}
       className={cn(
-        "inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium tracking-wide transition-colors duration-300 cursor-pointer",
+        "inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium tracking-wide transition-colors duration-300 cursor-pointer active:scale-95",
         styles,
         className
       )}
       onClick={onClick}
+      role={!href ? "button" : undefined}
+      tabIndex={!href ? 0 : undefined}
+      onKeyDown={!href && onClick ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } } : undefined}
     >
       {children}
     </motion.div>

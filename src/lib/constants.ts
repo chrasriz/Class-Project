@@ -17,9 +17,7 @@ export const SITE_CONFIG = {
 export const NAV_ITEMS = [
   { label: "About", href: "#about" },
   { label: "Skills", href: "#skills" },
-  { label: "Projects", href: "#projects" },
   { label: "Experience", href: "#experience" },
-  { label: "Lab", href: "#lab" },
   { label: "Contact", href: "#contact" },
   { label: "Resume", href: "/resume" },
 ] as const;
@@ -68,93 +66,6 @@ export const SKILLS = [
       { name: "Patch Management & Hardening", level: 86 },
       { name: "Cryptography & PKI", level: 83 },
     ],
-  },
-];
-
-export const PROJECTS = [
-  {
-    id: "sentinel-siem",
-    title: "Sentinel SIEM Platform",
-    subtitle: "Security Information & Event Management",
-    description:
-      "Designed and deployed a custom SIEM solution integrating real-time log aggregation, threat correlation, and automated alerting across a multi-node network environment.",
-    problem:
-      "Legacy monitoring tools lacked centralized visibility across distributed network segments, creating blind spots in threat detection.",
-    architecture:
-      "Elastic Stack (Elasticsearch, Logstash, Kibana) with custom Python-based correlation engine, deployed on hardened Linux servers with role-based access.",
-    tools: ["Elasticsearch", "Logstash", "Kibana", "Python", "Linux", "Docker"],
-    results: [
-      "Reduced mean detection time by 73%",
-      "Consolidated 12 log sources into unified dashboard",
-      "Automated 40+ alert rules for critical events",
-    ],
-    lessons:
-      "Building effective detection requires deep understanding of normal baseline behavior before defining anomalies.",
-    image: "/projects/sentinel.svg",
-    color: "#06b6d4",
-  },
-  {
-    id: "zero-trust-network",
-    title: "Zero Trust Network Architecture",
-    subtitle: "Enterprise Network Segmentation",
-    description:
-      "Implemented a zero-trust network model for a simulated enterprise environment with micro-segmentation, identity-based access, and continuous verification.",
-    problem:
-      "Flat network topologies enable lateral movement after initial compromise, putting critical assets at risk.",
-    architecture:
-      "pfSense firewalls with VLAN segmentation, RADIUS authentication, certificate-based device trust, and continuous posture assessment.",
-    tools: ["pfSense", "RADIUS", "VLANs", "802.1X", "Wireshark", "Ansible"],
-    results: [
-      "Eliminated lateral movement paths between segments",
-      "Enforced per-device authentication across all zones",
-      "Created automated compliance verification scripts",
-    ],
-    lessons:
-      "Zero trust is a philosophy, not a product. Every architectural decision must reinforce the principle of least privilege.",
-    image: "/projects/zerotrust.svg",
-    color: "#8b5cf6",
-  },
-  {
-    id: "threat-hunter",
-    title: "Threat Hunter Automation",
-    subtitle: "Proactive Threat Detection Engine",
-    description:
-      "Built an automated threat hunting framework that runs scheduled queries against endpoint telemetry and network flow data to surface indicators of compromise.",
-    problem:
-      "Reactive alert-based security misses sophisticated adversaries who operate below detection thresholds.",
-    architecture:
-      "Python orchestration layer with YARA rules, Sigma detections, and MITRE ATT&CK mapping. Results feed into a custom dashboard.",
-    tools: ["Python", "YARA", "Sigma", "MITRE ATT&CK", "SQLite", "Grafana"],
-    results: [
-      "Identified 3 previously undetected persistence mechanisms",
-      "Automated 25 hunting hypotheses into scheduled jobs",
-      "Mapped findings to ATT&CK techniques for reporting",
-    ],
-    lessons:
-      "Effective hunting requires structured hypotheses grounded in adversary tradecraft, not random searches.",
-    image: "/projects/threathunter.svg",
-    color: "#f59e0b",
-  },
-  {
-    id: "secure-homelab",
-    title: "Secure Infrastructure Lab",
-    subtitle: "Virtualized Security Testing Environment",
-    description:
-      "Engineered a comprehensive homelab environment for security testing, featuring segmented networks, vulnerable targets, and monitoring infrastructure.",
-    problem:
-      "Hands-on security skills require a safe, controlled environment that mirrors real-world enterprise architectures.",
-    architecture:
-      "Proxmox hypervisor hosting segmented VLANs with pfSense routing, Active Directory domain, Kali attack box, and centralized logging.",
-    tools: ["Proxmox", "pfSense", "Active Directory", "Kali Linux", "Splunk", "Docker"],
-    results: [
-      "Simulated 5 enterprise attack scenarios end-to-end",
-      "Built reproducible infrastructure-as-code templates",
-      "Trained detection engineering against live attacks",
-    ],
-    lessons:
-      "The best defense engineers are those who deeply understand offense. Building attack labs accelerates defensive maturity.",
-    image: "/projects/homelab.svg",
-    color: "#10b981",
   },
 ];
 
@@ -215,24 +126,3 @@ export const CERTIFICATIONS = [
   { name: "OPSWAT ICIP", issuer: "OPSWAT", year: "2025", status: "Active" },
 ];
 
-export const LAB_NODES = [
-  { id: "firewall", label: "Firewall", x: 50, y: 20, type: "security" as const },
-  { id: "ids", label: "IDS/IPS", x: 30, y: 40, type: "security" as const },
-  { id: "siem", label: "SIEM", x: 70, y: 40, type: "monitoring" as const },
-  { id: "server1", label: "Web Server", x: 20, y: 65, type: "server" as const },
-  { id: "server2", label: "DB Server", x: 50, y: 65, type: "server" as const },
-  { id: "server3", label: "App Server", x: 80, y: 65, type: "server" as const },
-  { id: "endpoint", label: "Endpoints", x: 50, y: 85, type: "endpoint" as const },
-];
-
-export const LAB_CONNECTIONS = [
-  { from: "firewall", to: "ids" },
-  { from: "firewall", to: "siem" },
-  { from: "ids", to: "server1" },
-  { from: "ids", to: "server2" },
-  { from: "siem", to: "server2" },
-  { from: "siem", to: "server3" },
-  { from: "server1", to: "endpoint" },
-  { from: "server2", to: "endpoint" },
-  { from: "server3", to: "endpoint" },
-];

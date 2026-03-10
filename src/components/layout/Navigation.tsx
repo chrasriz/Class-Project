@@ -112,7 +112,16 @@ export function Navigation() {
                 <motion.a
                   key={item.href}
                   href={item.href}
-                  onClick={() => setMobileOpen(false)}
+                  onClick={(e) => {
+                    setMobileOpen(false);
+                    if (item.href.startsWith("#")) {
+                      e.preventDefault();
+                      setTimeout(() => {
+                        const el = document.querySelector(item.href);
+                        if (el) el.scrollIntoView({ behavior: "smooth" });
+                      }, 350);
+                    }
+                  }}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 + 0.1 }}

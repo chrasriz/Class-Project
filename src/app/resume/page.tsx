@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { SITE_CONFIG } from "@/lib/constants";
 import { Navigation } from "@/components/layout/Navigation";
 import { AmbientBackground } from "@/components/layout/AmbientBackground";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { MagneticButton } from "@/components/ui/MagneticButton";
+import Link from "next/link";
 
 const RESUME_DATA = {
   name: "Chaudhry Rasikh Rizwan",
@@ -138,12 +139,12 @@ function LockedState() {
             </svg>
           </MagneticButton>
 
-          <a
+          <Link
             href="/"
             className="block mt-6 text-sm text-muted hover:text-foreground transition-colors"
           >
             &larr; Back to portfolio
-          </a>
+          </Link>
         </GlassPanel>
       </motion.div>
     </div>
@@ -283,12 +284,12 @@ function ResumeContent() {
 
           {/* Back link */}
           <div className="text-center mt-8">
-            <a
+            <Link
               href="/"
               className="text-sm text-muted hover:text-foreground transition-colors"
             >
               &larr; Back to portfolio
-            </a>
+            </Link>
           </div>
         </motion.div>
       </div>
@@ -296,17 +297,17 @@ function ResumeContent() {
   );
 }
 
-export default function ResumePage() {
-  const [unlocked, setUnlocked] = useState<boolean | null>(null);
+function getUnlockedState(): boolean | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem("resume_unlocked") === "true";
+  } catch {
+    return false;
+  }
+}
 
-  useEffect(() => {
-    try {
-      const val = localStorage.getItem("resume_unlocked");
-      setUnlocked(val === "true");
-    } catch {
-      setUnlocked(false);
-    }
-  }, []);
+export default function ResumePage() {
+  const [unlocked] = useState<boolean | null>(() => getUnlockedState());
 
   // Loading state
   if (unlocked === null) {

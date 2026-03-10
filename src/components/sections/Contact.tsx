@@ -4,7 +4,6 @@ import { useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { GlassPanel } from "@/components/ui/GlassPanel";
-import { MagneticButton } from "@/components/ui/MagneticButton";
 import { SITE_CONFIG } from "@/lib/constants";
 import { fadeUp } from "@/lib/animations";
 
@@ -259,26 +258,23 @@ export function Contact() {
                     </p>
                   )}
 
-                  <MagneticButton
-                    variant="primary"
-                    className="w-full justify-center"
-                    onClick={() => {
-                      const formEl = document.querySelector("form");
-                      if (formEl) formEl.requestSubmit();
-                    }}
+                  <button
+                    type="submit"
+                    disabled={status === "sending"}
+                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-medium tracking-wide cursor-pointer bg-cyan/10 text-cyan border border-cyan/30 hover:bg-cyan/20 hover:border-cyan/50 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
                   >
                     {status === "sending" ? (
-                      <span className="flex items-center gap-2">
-                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <>
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                         </svg>
                         Sending...
-                      </span>
+                      </>
                     ) : (
                       "Send Message"
                     )}
-                  </MagneticButton>
+                  </button>
                 </form>
               )}
             </GlassPanel>

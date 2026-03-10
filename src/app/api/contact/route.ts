@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Resend } from "resend";
 
 interface ContactPayload {
   name: string;
@@ -12,7 +13,13 @@ function isValidEmail(email: string): boolean {
 }
 
 function sanitize(str: string): string {
-  return str.replace(/[<>]/g, "").trim();
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;")
+    .trim();
 }
 
 export async function POST(req: NextRequest) {
@@ -42,38 +49,50 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Sanitize
+    // Sanitize inputs
     const sanitized = {
       name: sanitize(name),
       email: sanitize(email),
-      subject: subject ? sanitize(subject) : "",
+      subject: subject ? sanitize(subject) : "New Message",
       message: sanitize(message),
     };
 
-    // In production, integrate with an email service:
-    // - Resend (resend.com)
-    // - SendGrid
-    // - AWS SES
-    // - Nodemailer with SMTP
-    //
-    // Example with Resend:
-    // const resend = new Resend(process.env.RESEND_API_KEY);
-    // await resend.emails.send({
-    //   from: "portfolio@chrasriz.com",
-    //   to: process.env.CONTACT_EMAIL!,
-    //   subject: `Portfolio Contact: ${sanitized.subject || "New Message"}`,
-    //   html: `<p><strong>From:</strong> ${sanitized.name} (${sanitized.email})</p>
-    //          <p><strong>Subject:</strong> ${sanitized.subject}</p>
-    //          <p>${sanitized.message}</p>`,
-    // });
+    // Send email via Resend
+    if (process.env.RESEND_API_KEY) {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      const { error } = await resend.emails.send({
+        from: `Portfolio <${process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev"}>`,
+        to: process.env.CONTACT_EMAIL || "connect@chrasriz.com",
+        replyTo: email,
+        subject: `Portfolio Contact: ${sanitized.subject}`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #06b6d4; border-bottom: 2px solid #06b6d4; padding-bottom: 8px;">New Portfolio Message</h2>
+            <p><strong>From:</strong> ${sanitized.name}</p>
+            <p><strong>Email:</strong> ${sanitized.email}</p>
+            <p><strong>Subject:</strong> ${sanitized.subject}</p>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 16px 0;" />
+            <p style="white-space: pre-wrap;">${sanitized.message}</p>
+          </div>
+        `,
+      });
+
+      if (error) {
+        console.error("Resend error:", error);
+        return NextResponse.json(
+          { error: "Failed to send message. Please try again or email directly." },
+          { status: 500 }
+        );
+      }
+    }
 
     return NextResponse.json(
-      { success: true, message: "Message received successfully." },
+      { success: true, message: "Message sent successfully." },
       { status: 200 }
     );
   } catch {
     return NextResponse.json(
-      { error: "Internal server error." },
+      { error: "Something went wrong. Please try again or email directly." },
       { status: 500 }
     );
   }

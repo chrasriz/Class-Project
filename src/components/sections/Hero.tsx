@@ -93,9 +93,9 @@ export function Hero() {
           transition={{ duration: 0.8, delay: 1.9 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          <MagneticButton href="#projects" variant="primary">
-            View Projects
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <MagneticButton href="#experience" variant="primary">
+            View Experience
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
           </MagneticButton>
