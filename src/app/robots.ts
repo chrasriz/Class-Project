@@ -6,6 +6,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
     },
-    sitemap: "https://ras.dev/sitemap.xml",
+    sitemap: "https://chrasriz.com/sitemap.xml",
   };
 }
