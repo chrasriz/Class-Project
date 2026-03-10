@@ -10,7 +10,7 @@ export const SITE_CONFIG = {
   phone: "+1(647)594-0449",
   personalEmail: "Rizwan.rasikh@gmail.com",
   socials: {
-    linkedin: "https://linkedin.com/in/chrasriz",
+    linkedin: "https://www.linkedin.com/in/ch-rasikh-rizwan/",
   },
 };
 
