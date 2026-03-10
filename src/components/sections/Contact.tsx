@@ -15,7 +15,7 @@ interface FormState {
   message: string;
 }
 
-type Status = "idle" | "sending" | "success" | "error";
+type Status = "idle" | "sending" | "success" | "error" | "validation";
 
 export function Contact() {
   const [form, setForm] = useState<FormState>({
@@ -25,21 +25,27 @@ export function Contact() {
     message: "",
   });
   const [status, setStatus] = useState<Status>("idle");
+  const [validationMsg, setValidationMsg] = useState("");
   const [honeypot, setHoneypot] = useState("");
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setValidationMsg("");
 
     // Anti-spam honeypot
     if (honeypot) return;
 
     // Validation
     if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
+      setStatus("validation");
+      setValidationMsg("Please fill in all required fields.");
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(form.email)) {
+      setStatus("validation");
+      setValidationMsg("Please enter a valid email address.");
       return;
     }
 
@@ -100,7 +106,7 @@ export function Contact() {
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-lg bg-cyan-dim flex items-center justify-center">
-                  <svg className="w-5 h-5 text-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <svg className="w-5 h-5 text-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                   </svg>
                 </div>
@@ -112,7 +118,7 @@ export function Contact() {
 
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-lg bg-cyan-dim flex items-center justify-center">
-                  <svg className="w-5 h-5 text-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <svg className="w-5 h-5 text-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
                   </svg>
@@ -240,6 +246,12 @@ export function Contact() {
                       placeholder="Tell me about your project or opportunity..."
                     />
                   </div>
+
+                  {status === "validation" && (
+                    <p className="text-sm text-amber-400">
+                      {validationMsg}
+                    </p>
+                  )}
 
                   {status === "error" && (
                     <p className="text-sm text-red-400">

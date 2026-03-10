@@ -100,6 +100,12 @@ function LetterExplosion({ active }: { active: boolean }) {
 
 // Speed lines streaking past
 function SpeedLines() {
+  const [screenWidth, setScreenWidth] = useState(1920);
+
+  useEffect(() => {
+    setScreenWidth(window.innerWidth);
+  }, []);
+
   const lines = useMemo(
     () =>
       Array.from({ length: 30 }).map((_, i) => ({
@@ -120,7 +126,7 @@ function SpeedLines() {
           className="absolute h-[1px] bg-gradient-to-l from-cyan/40 to-transparent"
           style={{ top: `${line.top}%`, width: line.width, right: -line.width }}
           animate={{
-            x: [0, -(window?.innerWidth || 1920) - line.width * 2],
+            x: [0, -screenWidth - line.width * 2],
             opacity: [0, line.opacity, 0],
           }}
           transition={{

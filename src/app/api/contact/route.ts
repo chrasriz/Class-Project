@@ -59,15 +59,13 @@ export async function POST(req: NextRequest) {
     // Example with Resend:
     // const resend = new Resend(process.env.RESEND_API_KEY);
     // await resend.emails.send({
-    //   from: "portfolio@ras.dev",
+    //   from: "portfolio@chrasriz.com",
     //   to: process.env.CONTACT_EMAIL!,
     //   subject: `Portfolio Contact: ${sanitized.subject || "New Message"}`,
     //   html: `<p><strong>From:</strong> ${sanitized.name} (${sanitized.email})</p>
     //          <p><strong>Subject:</strong> ${sanitized.subject}</p>
     //          <p>${sanitized.message}</p>`,
     // });
-
-    console.log("Contact form submission:", sanitized);
 
     return NextResponse.json(
       { success: true, message: "Message received successfully." },

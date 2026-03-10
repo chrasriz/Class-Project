@@ -10,14 +10,16 @@ export const SITE_CONFIG = {
   phone: "+1(647)594-0449",
   personalEmail: "Rizwan.rasikh@gmail.com",
   socials: {
-    linkedin: "https://linkedin.com/in/chrasriz",
+    linkedin: "https://www.linkedin.com/in/ch-rasikh-rizwan/",
   },
 };
 
 export const NAV_ITEMS = [
   { label: "About", href: "#about" },
   { label: "Skills", href: "#skills" },
+  { label: "Projects", href: "#projects" },
   { label: "Experience", href: "#experience" },
+  { label: "Lab", href: "#lab" },
   { label: "Contact", href: "#contact" },
   { label: "Resume", href: "/resume" },
 ] as const;
