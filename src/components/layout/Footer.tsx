@@ -42,14 +42,6 @@ export function Footer() {
             </h4>
             <div className="flex flex-col gap-2">
               <a
-                href={SITE_CONFIG.socials.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-muted hover:text-foreground transition-colors"
-              >
-                GitHub
-              </a>
-              <a
                 href={SITE_CONFIG.socials.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"

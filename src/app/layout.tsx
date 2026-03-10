@@ -43,36 +43,36 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Ras | Cybersecurity Analyst & Network Engineer",
+  title: "Rasikh Rizwan | Cybersecurity Analyst",
   description:
-    "Portfolio of Ras — Cybersecurity Analyst, Network Engineer, and Technical Builder based in Toronto, Canada. Specializing in security infrastructure, network architecture, and systems engineering.",
+    "Portfolio of Chaudhry Rasikh Rizwan — Cybersecurity Analyst and IT Professional based in Toronto, Canada. Specializing in SOC operations, network security, and access hardening.",
   keywords: [
     "cybersecurity",
-    "network engineer",
     "security analyst",
+    "SOC",
+    "SIEM",
+    "network security",
     "portfolio",
     "Toronto",
-    "penetration testing",
-    "SIEM",
-    "zero trust",
-    "infrastructure",
+    "CCNA",
+    "CompTIA Security+",
   ],
-  authors: [{ name: "Ras" }],
-  creator: "Ras",
+  authors: [{ name: "Rasikh Rizwan" }],
+  creator: "Rasikh Rizwan",
   openGraph: {
     type: "website",
     locale: "en_CA",
-    url: "https://ras.dev",
-    title: "Ras | Cybersecurity Analyst & Network Engineer",
+    url: "https://chrasriz.com",
+    title: "Rasikh Rizwan | Cybersecurity Analyst",
     description:
-      "Cybersecurity professional specializing in security infrastructure, network architecture, and systems engineering.",
-    siteName: "Ras Portfolio",
+      "Cybersecurity Analyst specializing in SOC operations, network security, and access hardening.",
+    siteName: "Rasikh Rizwan Portfolio",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ras | Cybersecurity Analyst & Network Engineer",
+    title: "Rasikh Rizwan | Cybersecurity Analyst",
     description:
-      "Cybersecurity professional specializing in security infrastructure, network architecture, and systems engineering.",
+      "Cybersecurity Analyst specializing in SOC operations, network security, and access hardening.",
   },
   robots: {
     index: true,

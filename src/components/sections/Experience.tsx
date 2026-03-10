@@ -5,7 +5,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { EXPERIENCE, CERTIFICATIONS } from "@/lib/constants";
 import { fadeUp, staggerContainer } from "@/lib/animations";
 
-const TYPE_STYLES = {
+const TYPE_STYLES: Record<string, { color: string; label: string }> = {
   work: { color: "bg-cyan", label: "Work" },
   certification: { color: "bg-amber-400", label: "Certification" },
   education: { color: "bg-violet-400", label: "Education" },
@@ -67,9 +67,9 @@ export function Experience() {
                   </p>
                   <span
                     className={`inline-block mt-3 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider rounded ${
-                      item.type === "work"
+                      style.label === "Work"
                         ? "text-cyan bg-cyan-dim"
-                        : item.type === "certification"
+                        : style.label === "Certification"
                         ? "text-amber-400 bg-amber-400/10"
                         : "text-violet-400 bg-violet-400/10"
                     }`}
