@@ -8,9 +8,7 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { Hero } from "@/components/sections/Hero";
 import { About } from "@/components/sections/About";
 import { Skills } from "@/components/sections/Skills";
-import { Projects } from "@/components/sections/Projects";
 import { Experience } from "@/components/sections/Experience";
-import { Lab } from "@/components/sections/Lab";
 import { Contact } from "@/components/sections/Contact";
 
 export default function Home() {
@@ -33,13 +31,7 @@ export default function Home() {
         <Skills />
         <div className="glow-line max-w-xs mx-auto" />
 
-        <Projects />
-        <div className="glow-line max-w-xs mx-auto" />
-
         <Experience />
-        <div className="glow-line max-w-xs mx-auto" />
-
-        <Lab />
         <div className="glow-line max-w-xs mx-auto" />
 
         <Contact />

@@ -23,14 +23,14 @@ const LIVE_STATS = [
 ];
 
 const LOG_ENTRIES = [
-  { time: "14:23:07", level: "INFO", msg: "Firewall rule updated — port 443 inbound allowed" },
-  { time: "14:23:12", level: "WARN", msg: "Suspicious login attempt from 203.0.113.42 — blocked" },
-  { time: "14:23:18", level: "INFO", msg: "IDS signature update completed — 47 new rules" },
-  { time: "14:23:25", level: "CRIT", msg: "Port scan detected from 198.51.100.7 — auto-quarantined" },
+  { time: "14:23:07", level: "INFO", msg: "Firewall rule updated - port 443 inbound allowed" },
+  { time: "14:23:12", level: "WARN", msg: "Suspicious login attempt from 203.0.113.42 - blocked" },
+  { time: "14:23:18", level: "INFO", msg: "IDS signature update completed - 47 new rules" },
+  { time: "14:23:25", level: "CRIT", msg: "Port scan detected from 198.51.100.7 - auto-quarantined" },
   { time: "14:23:31", level: "INFO", msg: "SSL certificate renewed for internal services" },
-  { time: "14:23:38", level: "WARN", msg: "Elevated DNS queries to unknown TLD — flagged for review" },
-  { time: "14:23:45", level: "INFO", msg: "VPN tunnel re-established — latency nominal" },
-  { time: "14:23:52", level: "INFO", msg: "Backup verification passed — all snapshots intact" },
+  { time: "14:23:38", level: "WARN", msg: "Elevated DNS queries to unknown TLD - flagged for review" },
+  { time: "14:23:45", level: "INFO", msg: "VPN tunnel re-established - latency nominal" },
+  { time: "14:23:52", level: "INFO", msg: "Backup verification passed - all snapshots intact" },
 ];
 
 function NetworkDiagram() {
@@ -147,7 +147,7 @@ function LiveLogFeed() {
       {visibleCount >= LOG_ENTRIES.length && (
         <div className="flex items-center gap-2 text-subtle pt-2">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Monitoring active — awaiting events</span>
+          <span>Monitoring active - awaiting events</span>
         </div>
       )}
     </div>

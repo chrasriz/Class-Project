@@ -74,7 +74,7 @@ export function Contact() {
         <SectionHeading
           label="Contact"
           title="Start a Conversation"
-          description="Interested in collaboration, consulting, or just want to connect — reach out."
+          description="Interested in collaboration, consulting, or just want to connect? Reach out."
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-5xl mx-auto">
@@ -92,7 +92,7 @@ export function Contact() {
               </h3>
               <p className="text-muted leading-relaxed">
                 Whether you need a security assessment, network architecture design, or a
-                technical builder for your team — I&apos;m ready to contribute. Every conversation
+                technical builder for your team, I&apos;m ready to contribute. Every conversation
                 starts with understanding your challenge.
               </p>
             </div>

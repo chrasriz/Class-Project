@@ -297,7 +297,9 @@ export function LoadingScreen() {
               className="absolute"
               initial={{ x: -400, y: 60, opacity: 0 }}
               animate={
-                phase === 0
+                phase < 0
+                  ? { x: -400, y: 60, opacity: 0 }
+                  : phase === 0
                   ? {
                       x: [-400, -60],
                       y: [60, 0],
