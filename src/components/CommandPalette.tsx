@@ -46,7 +46,10 @@ export function CommandPalette() {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
-        setOpen((prev) => !prev);
+        setOpen((prev) => {
+          if (!prev) setQuery("");
+          return !prev;
+        });
       }
       if (e.key === "Escape") setOpen(false);
     };
@@ -56,7 +59,6 @@ export function CommandPalette() {
 
   useEffect(() => {
     if (open) {
-      setQuery("");
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [open]);
