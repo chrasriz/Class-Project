@@ -6,10 +6,10 @@ import { GlassPanel } from "@/components/ui/GlassPanel";
 import { fadeUp, staggerContainer } from "@/lib/animations";
 
 const STATS = [
-  { value: "15+", label: "Projects Delivered" },
-  { value: "5+", label: "Certifications" },
+  { value: "200+", label: "IT Issues Resolved" },
+  { value: "3", label: "Certifications" },
   { value: "3+", label: "Years Experience" },
-  { value: "99.9%", label: "Uptime Maintained" },
+  { value: "~20%", label: "Uptime Improvement" },
 ];
 
 const TRAITS = [
@@ -39,19 +39,20 @@ export function About() {
             className="space-y-6"
           >
             <p className="text-muted leading-relaxed">
-              Based in Toronto, I operate at the intersection of cybersecurity, network engineering,
-              and infrastructure design. My work centers on understanding adversary behavior to
-              build systems that anticipate and neutralize threats before they materialize.
+              Based in Toronto, I work at the intersection of cybersecurity and IT infrastructure.
+              From triaging Level-1 SIEM alerts and conducting malware analysis to providing hands-on
+              IT support across university systems — I bring a defense-first mindset to every challenge.
             </p>
             <p className="text-muted leading-relaxed">
-              I approach security as a discipline of precision — where every firewall rule, network
-              segment, and monitoring alert serves a deliberate purpose. From SIEM deployment to
-              zero-trust architecture, I focus on creating environments where security scales
-              alongside the systems it protects.
+              With a CCNA, CompTIA Security+, and OPSWAT ICIP under my belt, I specialize in
+              network reliability, access hardening, and SOC operations. I&apos;ve improved uptime by ~20%
+              through proactive monitoring, implemented VLANs and ACLs to limit lateral movement,
+              and secured services using HTTPS, SSH, and VPN with enforced IAM policies.
             </p>
             <p className="text-muted leading-relaxed">
-              My philosophy is simple: the best security infrastructure is invisible to those it
-              protects and impenetrable to those it defends against.
+              Currently pursuing a B.Sc. in Chemistry at York University while working as an IT
+              Assistant at the Lassonde School of Engineering — I thrive where technology meets
+              real-world problem solving.
             </p>
           </motion.div>
 

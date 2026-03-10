@@ -54,8 +54,15 @@ export function Navigation() {
               <a
                 key={item.href}
                 href={item.href}
-                className="relative px-4 py-2 text-sm text-muted hover:text-foreground transition-colors duration-300 group"
+                className={`relative px-4 py-2 text-sm text-muted hover:text-foreground transition-colors duration-300 group ${
+                  item.label === "Resume" ? "flex items-center gap-1.5" : ""
+                }`}
               >
+                {item.label === "Resume" && (
+                  <svg className="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                  </svg>
+                )}
                 {item.label}
                 <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[1px] bg-cyan/50 transition-all duration-300 group-hover:w-3/4" />
               </a>
@@ -109,8 +116,15 @@ export function Navigation() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 + 0.1 }}
-                  className="text-2xl font-light text-foreground hover:text-cyan transition-colors"
+                  className={`text-2xl font-light text-foreground hover:text-cyan transition-colors ${
+                    item.label === "Resume" ? "flex items-center gap-2" : ""
+                  }`}
                 >
+                  {item.label === "Resume" && (
+                    <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                    </svg>
+                  )}
                   {item.label}
                 </motion.a>
               ))}

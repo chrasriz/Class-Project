@@ -18,10 +18,9 @@ const COMMANDS = [
     shortcut: "Home",
   },
   {
-    label: "Download Resume",
+    label: "View Resume",
     action: () => {
-      // Placeholder — link to actual resume
-      window.open("#", "_blank");
+      window.location.href = "/resume";
     },
     shortcut: "",
   },

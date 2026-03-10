@@ -7,8 +7,8 @@ import { MagneticButton } from "@/components/ui/MagneticButton";
 
 const TITLES = [
   "Cybersecurity Analyst",
-  "Network Engineer",
-  "Technical Builder",
+  "IT Professional",
+  "Network Security Specialist",
 ];
 
 export function Hero() {
