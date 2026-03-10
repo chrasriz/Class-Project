@@ -3,7 +3,6 @@
 import { Navigation } from "@/components/layout/Navigation";
 import { Footer } from "@/components/layout/Footer";
 import { AmbientBackground } from "@/components/layout/AmbientBackground";
-import { LoadingScreen } from "@/components/layout/LoadingScreen";
 import { CommandPalette } from "@/components/CommandPalette";
 import { Hero } from "@/components/sections/Hero";
 import { About } from "@/components/sections/About";
@@ -16,7 +15,6 @@ import { Contact } from "@/components/sections/Contact";
 export default function Home() {
   return (
     <>
-      <LoadingScreen />
       <AmbientBackground />
       <CommandPalette />
       <Navigation />
