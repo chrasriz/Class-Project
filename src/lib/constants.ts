@@ -2,7 +2,7 @@ export const SITE_CONFIG = {
   name: "Rasikh",
   title: "Rasikh Rizwan | Cybersecurity Analyst",
   description:
-    "Portfolio of Chaudhry Rasikh Rizwan — Cybersecurity Analyst and IT Professional based in Toronto, Canada. Specializing in SOC operations, network security, and access hardening.",
+    "Portfolio of Chaudhry Rasikh Rizwan, Cybersecurity Analyst and IT Professional based in Toronto, Canada. Specializing in SOC operations, network security, and access hardening.",
   url: "https://chrasriz.com",
   location: "Toronto, Canada",
   role: "Cybersecurity Analyst | IT Professional",
@@ -110,7 +110,7 @@ export const PROJECTS = [
       "Created automated compliance verification scripts",
     ],
     lessons:
-      "Zero trust is a philosophy, not a product — every architectural decision must reinforce the principle of least privilege.",
+      "Zero trust is a philosophy, not a product. Every architectural decision must reinforce the principle of least privilege.",
     image: "/projects/zerotrust.svg",
     color: "#8b5cf6",
   },
@@ -152,7 +152,7 @@ export const PROJECTS = [
       "Trained detection engineering against live attacks",
     ],
     lessons:
-      "The best defense engineers are those who deeply understand offense — building attack labs accelerates defensive maturity.",
+      "The best defense engineers are those who deeply understand offense. Building attack labs accelerates defensive maturity.",
     image: "/projects/homelab.svg",
     color: "#10b981",
   },
@@ -160,7 +160,7 @@ export const PROJECTS = [
 
 export const EXPERIENCE = [
   {
-    period: "Jan 2026 — Present",
+    period: "Jan 2026 - Present",
     title: "Information Technology Assistant",
     organization: "Lassonde School of Engineering, York University",
     description:
@@ -168,7 +168,7 @@ export const EXPERIENCE = [
     type: "work" as const,
   },
   {
-    period: "May 2025 — Aug 2025",
+    period: "May 2025 - Aug 2025",
     title: "Cyber Security Analyst",
     organization: "A Hamson Inc., UAE",
     description:
@@ -176,7 +176,7 @@ export const EXPERIENCE = [
     type: "work" as const,
   },
   {
-    period: "Sep 2022 — Feb 2023",
+    period: "Sep 2022 - Feb 2023",
     title: "Information Technology Internship",
     organization: "Maplewood Canadian International School, Abu Dhabi",
     description:
@@ -184,7 +184,7 @@ export const EXPERIENCE = [
     type: "work" as const,
   },
   {
-    period: "Sep 2021 — Feb 2022",
+    period: "Sep 2021 - Feb 2022",
     title: "Social Media Managing Internship",
     organization: "Maplewood Canadian International School, Abu Dhabi",
     description:
@@ -192,7 +192,7 @@ export const EXPERIENCE = [
     type: "work" as const,
   },
   {
-    period: "2024 — Present",
+    period: "2024 - Present",
     title: "B.Sc. Chemistry",
     organization: "York University, North York, ON",
     description:

@@ -45,7 +45,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Rasikh Rizwan | Cybersecurity Analyst",
   description:
-    "Portfolio of Chaudhry Rasikh Rizwan — Cybersecurity Analyst and IT Professional based in Toronto, Canada. Specializing in SOC operations, network security, and access hardening.",
+    "Portfolio of Chaudhry Rasikh Rizwan, Cybersecurity Analyst and IT Professional based in Toronto, Canada. Specializing in SOC operations, network security, and access hardening.",
   keywords: [
     "cybersecurity",
     "security analyst",

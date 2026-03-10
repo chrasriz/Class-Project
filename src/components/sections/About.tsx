@@ -13,7 +13,7 @@ const STATS = [
 ];
 
 const TRAITS = [
-  { title: "Analytical Mindset", description: "Every system has a story — I read it through logs, traffic patterns, and behavioral anomalies." },
+  { title: "Analytical Mindset", description: "Every system has a story. I read it through logs, traffic patterns, and behavioral anomalies." },
   { title: "Defense-First Architecture", description: "Security isn't an afterthought. I build systems where protection is foundational, not bolted on." },
   { title: "Continuous Learner", description: "Threat landscapes evolve daily. I stay ahead through constant research, lab work, and certification." },
   { title: "Systems Thinker", description: "I see interconnections where others see components. Understanding the whole system reveals its vulnerabilities." },
@@ -41,7 +41,7 @@ export function About() {
             <p className="text-muted leading-relaxed">
               Based in Toronto, I work at the intersection of cybersecurity and IT infrastructure.
               From triaging Level-1 SIEM alerts and conducting malware analysis to providing hands-on
-              IT support across university systems — I bring a defense-first mindset to every challenge.
+              IT support across university systems, I bring a defense-first mindset to every challenge.
             </p>
             <p className="text-muted leading-relaxed">
               With a CCNA, CompTIA Security+, and OPSWAT ICIP under my belt, I specialize in
@@ -51,7 +51,7 @@ export function About() {
             </p>
             <p className="text-muted leading-relaxed">
               Currently pursuing a B.Sc. in Chemistry at York University while working as an IT
-              Assistant at the Lassonde School of Engineering — I thrive where technology meets
+              Assistant at the Lassonde School of Engineering, and I thrive where technology meets
               real-world problem solving.
             </p>
           </motion.div>
