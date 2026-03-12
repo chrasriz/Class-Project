@@ -88,7 +88,14 @@ function useScrambleText(target: string, active: boolean, speed = 40, scrambleCy
   return { display, done };
 }
 
-// Status line component
+// Config options for each configurable status line
+const CONFIG_OPTIONS: Record<string, string[]> = {
+  protocol: ["TLS 1.3", "TLS 1.2", "QUIC", "SSH-2"],
+  cipher: ["AES-256-GCM", "ChaCha20-Poly1305", "AES-128-CBC", "Camellia-256"],
+  key_exchange: ["X25519", "P-384", "RSA-4096", "DH-2048"],
+};
+
+// Status line component — static (no dropdown)
 function StatusLine({ label, value, delay, active }: { label: string; value: string; delay: number; active: boolean }) {
   return (
     <motion.div
@@ -100,6 +107,79 @@ function StatusLine({ label, value, delay, active }: { label: string; value: str
       <span className="text-subtle">{label}</span>
       <span className="flex-1 border-b border-dotted border-white/5" />
       <span className="text-cyan">{value}</span>
+    </motion.div>
+  );
+}
+
+// Configurable status line with expandable dropdown
+function ConfigLine({
+  label,
+  value,
+  delay,
+  active,
+  expanded,
+  onToggle,
+  onSelect,
+}: {
+  label: string;
+  value: string;
+  delay: number;
+  active: boolean;
+  expanded: boolean;
+  onToggle: () => void;
+  onSelect: (val: string) => void;
+}) {
+  const options = CONFIG_OPTIONS[label] || [];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={active ? { opacity: 1, x: 0 } : {}}
+      transition={{ delay, duration: 0.4 }}
+      className="font-mono text-xs"
+    >
+      <div className="flex items-center gap-3">
+        <span className="text-subtle">{label}</span>
+        <span className="flex-1 border-b border-dotted border-white/5" />
+        <button
+          onClick={onToggle}
+          className="flex items-center gap-1.5 text-cyan hover:text-cyan/80 transition-colors cursor-pointer"
+        >
+          <span>{value}</span>
+          <svg
+            className={`w-3 h-3 text-subtle transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Dropdown options */}
+      <div
+        className={`overflow-hidden transition-all duration-300 ${
+          expanded ? "max-h-40 opacity-100 mt-2" : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="flex flex-wrap gap-1.5 pl-4">
+          {options.map((opt) => (
+            <button
+              key={opt}
+              onClick={() => onSelect(opt)}
+              className={`px-2.5 py-1 rounded text-[11px] border transition-all duration-200 cursor-pointer ${
+                opt === value
+                  ? "text-cyan border-cyan/30 bg-cyan/10"
+                  : "text-subtle border-white/5 hover:text-foreground hover:border-white/10 hover:bg-white/[0.03]"
+              }`}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      </div>
     </motion.div>
   );
 }
@@ -170,9 +250,46 @@ export function Contact() {
     120
   );
 
+  // Configurable status line state
+  const [config, setConfig] = useState({
+    protocol: "TLS 1.3",
+    cipher: "AES-256-GCM",
+    key_exchange: "X25519",
+  });
+  const [expandedLine, setExpandedLine] = useState<string | null>(null);
+  const [pendingChange, setPendingChange] = useState<{ key: string; value: string } | null>(null);
+
+  const handleToggleLine = useCallback((label: string) => {
+    setExpandedLine((prev) => (prev === label ? null : label));
+  }, []);
+
+  const handleSelectOption = useCallback((key: string, value: string) => {
+    if (value === config[key as keyof typeof config]) {
+      setExpandedLine(null);
+      return;
+    }
+    setPendingChange({ key, value });
+  }, [config]);
+
+  const handleConfirmChange = useCallback(() => {
+    if (!pendingChange) return;
+    setConfig((prev) => ({ ...prev, [pendingChange.key]: pendingChange.value }));
+    setPendingChange(null);
+    setExpandedLine(null);
+    // Reset decrypt so user has to re-decrypt with new config
+    if (phase !== "idle") {
+      setPhase("idle");
+    }
+  }, [pendingChange, phase]);
+
+  const handleCancelChange = useCallback(() => {
+    setPendingChange(null);
+  }, []);
+
   // Phase sequencing — scanning and decrypting triggered by user click
   const handleDecrypt = useCallback(() => {
     if (phase !== "idle") return;
+    setExpandedLine(null);
     setPhase("scanning");
     setTimeout(() => setPhase("decrypting"), 1500);
   }, [phase]);
@@ -251,11 +368,67 @@ export function Contact() {
 
                 {/* Status lines */}
                 <div className="space-y-3 mb-10">
-                  <StatusLine label="protocol" value="TLS 1.3" delay={0.5} active={isInView} />
-                  <StatusLine label="cipher" value="AES-256-GCM" delay={0.8} active={isInView} />
-                  <StatusLine label="key_exchange" value="X25519" delay={1.1} active={isInView} />
+                  <ConfigLine
+                    label="protocol"
+                    value={config.protocol}
+                    delay={0.5}
+                    active={isInView}
+                    expanded={expandedLine === "protocol"}
+                    onToggle={() => handleToggleLine("protocol")}
+                    onSelect={(v) => handleSelectOption("protocol", v)}
+                  />
+                  <ConfigLine
+                    label="cipher"
+                    value={config.cipher}
+                    delay={0.8}
+                    active={isInView}
+                    expanded={expandedLine === "cipher"}
+                    onToggle={() => handleToggleLine("cipher")}
+                    onSelect={(v) => handleSelectOption("cipher", v)}
+                  />
+                  <ConfigLine
+                    label="key_exchange"
+                    value={config.key_exchange}
+                    delay={1.1}
+                    active={isInView}
+                    expanded={expandedLine === "key_exchange"}
+                    onToggle={() => handleToggleLine("key_exchange")}
+                    onSelect={(v) => handleSelectOption("key_exchange", v)}
+                  />
                   <StatusLine label="identity" value="verified" delay={1.4} active={isInView} />
                 </div>
+
+                {/* Confirm change modal */}
+                {pendingChange && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-8 mx-auto max-w-sm"
+                  >
+                    <div className="border border-amber-400/30 bg-amber-400/[0.05] rounded-lg p-4 text-center">
+                      <p className="font-mono text-[11px] text-amber-400 tracking-wider mb-1">
+                        RECONFIGURE {pendingChange.key.toUpperCase()}
+                      </p>
+                      <p className="font-mono text-xs text-muted mb-4">
+                        Switch to <span className="text-foreground">{pendingChange.value}</span>? This will require re-authentication.
+                      </p>
+                      <div className="flex items-center justify-center gap-3">
+                        <button
+                          onClick={handleConfirmChange}
+                          className="px-4 py-1.5 font-mono text-[11px] tracking-wider text-emerald-400 border border-emerald-400/30 rounded bg-emerald-400/[0.05] hover:bg-emerald-400/10 transition-colors cursor-pointer"
+                        >
+                          CONFIRM
+                        </button>
+                        <button
+                          onClick={handleCancelChange}
+                          className="px-4 py-1.5 font-mono text-[11px] tracking-wider text-subtle border border-white/10 rounded hover:text-foreground hover:border-white/20 transition-colors cursor-pointer"
+                        >
+                          CANCEL
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
 
                 {/* The big email reveal */}
                 <div className="text-center mb-10">
