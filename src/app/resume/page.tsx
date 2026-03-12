@@ -315,7 +315,9 @@ function ResumeContent() {
 function getUnlockedState(): boolean | null {
   if (typeof window === "undefined") return null;
   try {
-    return localStorage.getItem("resume_unlocked") === "true";
+    // Clear stale localStorage key from previous implementation
+    localStorage.removeItem("resume_unlocked");
+    return sessionStorage.getItem("resume_unlocked") === "true";
   } catch {
     return false;
   }
