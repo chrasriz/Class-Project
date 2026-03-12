@@ -172,14 +172,12 @@ export function Contact() {
     120
   );
 
-  // Phase sequencing
-  useEffect(() => {
-    if (!isInView) return;
-    // idle -> scanning -> decrypting -> revealed
-    const t1 = setTimeout(() => setPhase("scanning"), 300);
-    const t2 = setTimeout(() => setPhase("decrypting"), 1800);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [isInView]);
+  // Phase sequencing — scanning and decrypting triggered by user click
+  const handleDecrypt = useCallback(() => {
+    if (phase !== "idle") return;
+    setPhase("scanning");
+    setTimeout(() => setPhase("decrypting"), 1500);
+  }, [phase]);
 
   useEffect(() => {
     if (emailRevealed && phase === "decrypting") {
@@ -270,56 +268,77 @@ export function Contact() {
 
                 {/* The big email reveal */}
                 <div className="text-center mb-10">
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={phase !== "idle" ? { opacity: 1 } : {}}
-                    transition={{ delay: 0.2, duration: 0.5 }}
-                    className="font-mono text-[10px] uppercase tracking-[0.3em] text-subtle mb-4"
-                  >
-                    {phase === "scanning" && "/// scanning for signal ///"}
-                    {phase === "decrypting" && "/// decrypting message ///"}
-                    {phase === "revealed" && "/// signal established ///"}
-                  </motion.p>
-
-                  <div className="relative inline-block">
-                    {/* Glow behind email */}
-                    {phase === "revealed" && (
-                      <div className="absolute inset-0 blur-2xl bg-cyan/10 scale-150 pointer-events-none" />
-                    )}
-
-                    <button
-                      onClick={handleCopyEmail}
-                      className="relative group cursor-pointer"
-                      aria-label={`Copy email: ${email}`}
-                    >
-                      <span
-                        className={`font-mono text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider transition-colors duration-500 ${
-                          phase === "revealed" ? "text-cyan" : "text-foreground/80"
-                        }`}
+                  {phase === "idle" ? (
+                    /* Decrypt button — shown before user initiates */
+                    <div>
+                      <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-subtle mb-6">
+                        /// encrypted transmission ready ///
+                      </p>
+                      <span className="block font-mono text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-foreground/20 mb-8 select-none">
+                        {"█".repeat(email.length)}
+                      </span>
+                      <button
+                        onClick={handleDecrypt}
+                        className="inline-flex items-center gap-2.5 px-6 py-3 font-mono text-sm tracking-wider text-cyan border border-cyan/30 rounded-lg bg-cyan/[0.05] hover:bg-cyan/10 hover:border-cyan/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] active:scale-95 transition-all duration-300 cursor-pointer"
                       >
-                        {phase === "idle" ? "█".repeat(email.length) : scrambledEmail}
-                      </span>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                        </svg>
+                        DECRYPT SIGNAL
+                      </button>
+                    </div>
+                  ) : (
+                    /* Decrypting / revealed states */
+                    <div>
+                      <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.5 }}
+                        className="font-mono text-[10px] uppercase tracking-[0.3em] text-subtle mb-4"
+                      >
+                        {phase === "scanning" && "/// scanning for signal ///"}
+                        {phase === "decrypting" && "/// decrypting message ///"}
+                        {phase === "revealed" && "/// signal established ///"}
+                      </motion.p>
 
-                      {/* Copy tooltip */}
-                      <span className={`absolute -bottom-8 left-1/2 -translate-x-1/2 font-mono text-[10px] tracking-wider transition-all duration-300 ${
-                        phase === "revealed" ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
-                      }`}>
-                        {copied ? (
-                          <span className="text-emerald-400">COPIED TO CLIPBOARD</span>
-                        ) : (
-                          <span className="text-subtle group-hover:text-cyan">CLICK TO COPY</span>
+                      <div className="relative inline-block">
+                        {phase === "revealed" && (
+                          <div className="absolute inset-0 blur-2xl bg-cyan/10 scale-150 pointer-events-none" />
                         )}
-                      </span>
-                    </button>
-                  </div>
 
-                  {/* Underline accent */}
-                  <motion.div
-                    initial={{ scaleX: 0 }}
-                    animate={phase === "revealed" ? { scaleX: 1 } : {}}
-                    transition={{ delay: 0.3, duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-                    className="mt-4 mx-auto h-[1px] max-w-xs bg-gradient-to-r from-transparent via-cyan/40 to-transparent origin-center"
-                  />
+                        <button
+                          onClick={handleCopyEmail}
+                          className="relative group cursor-pointer"
+                          aria-label={`Copy email: ${email}`}
+                        >
+                          <span
+                            className={`font-mono text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider transition-colors duration-500 ${
+                              phase === "revealed" ? "text-cyan" : "text-foreground/80"
+                            }`}
+                          >
+                            {scrambledEmail}
+                          </span>
+
+                          <span className={`absolute -bottom-8 left-1/2 -translate-x-1/2 font-mono text-[10px] tracking-wider transition-all duration-300 ${
+                            phase === "revealed" ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+                          }`}>
+                            {copied ? (
+                              <span className="text-emerald-400">COPIED TO CLIPBOARD</span>
+                            ) : (
+                              <span className="text-subtle group-hover:text-cyan">CLICK TO COPY</span>
+                            )}
+                          </span>
+                        </button>
+                      </div>
+
+                      <motion.div
+                        initial={{ scaleX: 0 }}
+                        animate={phase === "revealed" ? { scaleX: 1 } : {}}
+                        transition={{ delay: 0.3, duration: 0.8, ease: [0.25, 0.1, 0.25, 1] as const }}
+                        className="mt-4 mx-auto h-[1px] max-w-xs bg-gradient-to-r from-transparent via-cyan/40 to-transparent origin-center"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Access granted badge */}
