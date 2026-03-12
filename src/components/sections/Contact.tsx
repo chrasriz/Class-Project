@@ -88,12 +88,44 @@ function useScrambleText(target: string, active: boolean, speed = 40, scrambleCy
   return { display, done };
 }
 
-// Config options for each configurable status line
-const CONFIG_OPTIONS: Record<string, string[]> = {
-  protocol: ["TLS 1.3", "TLS 1.2", "QUIC", "SSH-2"],
-  cipher: ["AES-256-GCM", "ChaCha20-Poly1305", "AES-128-CBC", "Camellia-256"],
-  key_exchange: ["X25519", "P-384", "RSA-4096", "DH-2048"],
+// Config options with security ratings
+type ConfigOption = { value: string; secure: boolean; tag?: string };
+const CONFIG_OPTIONS: Record<string, ConfigOption[]> = {
+  protocol: [
+    { value: "TLS 1.3", secure: true },
+    { value: "TLS 1.2", secure: true },
+    { value: "QUIC", secure: true },
+    { value: "SSH-2", secure: true },
+    { value: "SSL 3.0", secure: false, tag: "DEPRECATED" },
+    { value: "TLS 1.0", secure: false, tag: "VULNERABLE" },
+  ],
+  cipher: [
+    { value: "AES-256-GCM", secure: true },
+    { value: "ChaCha20-Poly1305", secure: true },
+    { value: "AES-128-CBC", secure: true },
+    { value: "Camellia-256", secure: true },
+    { value: "RC4", secure: false, tag: "BROKEN" },
+    { value: "DES-CBC", secure: false, tag: "DEPRECATED" },
+    { value: "NULL", secure: false, tag: "NO ENCRYPTION" },
+  ],
+  key_exchange: [
+    { value: "X25519", secure: true },
+    { value: "P-384", secure: true },
+    { value: "RSA-4096", secure: true },
+    { value: "DH-2048", secure: true },
+    { value: "RSA-512", secure: false, tag: "BREAKABLE" },
+    { value: "DH-768", secure: false, tag: "WEAK" },
+    { value: "NULL", secure: false, tag: "NO KEY EXCHANGE" },
+  ],
 };
+
+// Check if a specific option value is secure
+function isOptionSecure(label: string, value: string): boolean {
+  const opts = CONFIG_OPTIONS[label];
+  if (!opts) return true;
+  const opt = opts.find((o) => o.value === value);
+  return opt ? opt.secure : true;
+}
 
 // Status line component — static (no dropdown)
 function StatusLine({ label, value, delay, active }: { label: string; value: string; delay: number; active: boolean }) {
@@ -118,6 +150,7 @@ function ConfigLine({
   delay,
   active,
   expanded,
+  isInsecure,
   onToggle,
   onSelect,
 }: {
@@ -126,6 +159,7 @@ function ConfigLine({
   delay: number;
   active: boolean;
   expanded: boolean;
+  isInsecure: boolean;
   onToggle: () => void;
   onSelect: (val: string) => void;
 }) {
@@ -143,8 +177,15 @@ function ConfigLine({
         <span className="flex-1 border-b border-dotted border-white/5" />
         <button
           onClick={onToggle}
-          className="flex items-center gap-1.5 text-cyan hover:text-cyan/80 transition-colors cursor-pointer"
+          className={`flex items-center gap-1.5 transition-colors cursor-pointer ${
+            isInsecure ? "text-red-400 hover:text-red-300" : "text-cyan hover:text-cyan/80"
+          }`}
         >
+          {isInsecure && (
+            <svg className="w-3 h-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+          )}
           <span>{value}</span>
           <svg
             className={`w-3 h-3 text-subtle transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
@@ -167,15 +208,24 @@ function ConfigLine({
         <div className="flex flex-wrap gap-1.5 pl-4">
           {options.map((opt) => (
             <button
-              key={opt}
-              onClick={() => onSelect(opt)}
-              className={`px-2.5 py-1 rounded text-[11px] border transition-all duration-200 cursor-pointer ${
-                opt === value
-                  ? "text-cyan border-cyan/30 bg-cyan/10"
-                  : "text-subtle border-white/5 hover:text-foreground hover:border-white/10 hover:bg-white/[0.03]"
+              key={opt.value}
+              onClick={() => onSelect(opt.value)}
+              className={`px-2.5 py-1 rounded text-[11px] border transition-all duration-200 cursor-pointer inline-flex items-center gap-1.5 ${
+                opt.value === value
+                  ? opt.secure
+                    ? "text-cyan border-cyan/30 bg-cyan/10"
+                    : "text-red-400 border-red-400/30 bg-red-400/10"
+                  : opt.secure
+                  ? "text-subtle border-white/5 hover:text-foreground hover:border-white/10 hover:bg-white/[0.03]"
+                  : "text-red-400/60 border-red-400/10 hover:text-red-400 hover:border-red-400/20 hover:bg-red-400/[0.05]"
               }`}
             >
-              {opt}
+              {opt.value}
+              {opt.tag && (
+                <span className={`text-[9px] uppercase tracking-wider ${opt.secure ? "text-subtle" : "text-red-400/70"}`}>
+                  {opt.tag}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -258,6 +308,15 @@ export function Contact() {
   });
   const [expandedLine, setExpandedLine] = useState<string | null>(null);
   const [pendingChange, setPendingChange] = useState<{ key: string; value: string } | null>(null);
+
+  // Compute overall security state
+  const isSecure =
+    isOptionSecure("protocol", config.protocol) &&
+    isOptionSecure("cipher", config.cipher) &&
+    isOptionSecure("key_exchange", config.key_exchange);
+
+  // Check if the pending change would make things insecure
+  const isPendingInsecure = pendingChange ? !isOptionSecure(pendingChange.key, pendingChange.value) : false;
 
   const handleToggleLine = useCallback((label: string) => {
     setExpandedLine((prev) => (prev === label ? null : label));
@@ -343,28 +402,55 @@ export function Contact() {
               {/* Terminal content */}
               <div className="relative z-10 p-8 md:p-12">
                 {/* Terminal header bar */}
-                <div className="flex items-center gap-2 mb-8 pb-4 border-b border-white/5">
+                <div className={`flex items-center gap-2 mb-8 pb-4 border-b ${isSecure ? "border-white/5" : "border-red-400/20"}`}>
                   <div className="flex gap-1.5">
                     <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
                     <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
+                    <div className={`w-2.5 h-2.5 rounded-full ${isSecure ? "bg-green-500/60" : "bg-red-500/60"}`} />
                   </div>
-                  <span className="ml-3 font-mono text-[10px] text-subtle tracking-wider">
-                    SECURE_CHANNEL — RSA-4096 — AES-256-GCM
+                  <span className={`ml-3 font-mono text-[10px] tracking-wider transition-colors duration-300 ${isSecure ? "text-subtle" : "text-red-400/80"}`}>
+                    {isSecure
+                      ? `SECURE_CHANNEL — ${config.key_exchange} — ${config.cipher}`
+                      : `UNSECURE_CHANNEL — ${config.key_exchange} — ${config.cipher}`}
                   </span>
                   <div className="ml-auto flex items-center gap-2">
-                    <div className={`w-1.5 h-1.5 rounded-full ${
+                    <div className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
+                      !isSecure ? "bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]" :
                       phase === "revealed" ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" :
                       phase === "idle" ? "bg-subtle" : "bg-cyan animate-pulse"
                     }`} />
-                    <span className="font-mono text-[10px] text-subtle">
-                      {phase === "idle" && "STANDBY"}
-                      {phase === "scanning" && "SCANNING"}
-                      {phase === "decrypting" && "DECRYPTING"}
-                      {phase === "revealed" && "CONNECTED"}
+                    <span className={`font-mono text-[10px] transition-colors duration-300 ${!isSecure ? "text-red-400/80" : "text-subtle"}`}>
+                      {!isSecure && "INSECURE"}
+                      {isSecure && phase === "idle" && "STANDBY"}
+                      {isSecure && phase === "scanning" && "SCANNING"}
+                      {isSecure && phase === "decrypting" && "DECRYPTING"}
+                      {isSecure && phase === "revealed" && "CONNECTED"}
                     </span>
                   </div>
                 </div>
+
+                {/* Insecure channel warning banner */}
+                {!isSecure && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="mb-6 border border-red-400/20 bg-red-400/[0.04] rounded-lg px-4 py-3 flex items-start gap-3"
+                  >
+                    <svg className="w-4 h-4 text-red-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                    </svg>
+                    <div>
+                      <p className="font-mono text-[11px] text-red-400 tracking-wider font-medium">
+                        WARNING: INSECURE CONFIGURATION DETECTED
+                      </p>
+                      <p className="font-mono text-[10px] text-red-400/60 mt-1 leading-relaxed">
+                        Your connection uses deprecated or vulnerable settings.
+                        An attacker could intercept or modify data in transit.
+                        Proceed at your own risk.
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
 
                 {/* Status lines */}
                 <div className="space-y-3 mb-10">
@@ -374,6 +460,7 @@ export function Contact() {
                     delay={0.5}
                     active={isInView}
                     expanded={expandedLine === "protocol"}
+                    isInsecure={!isOptionSecure("protocol", config.protocol)}
                     onToggle={() => handleToggleLine("protocol")}
                     onSelect={(v) => handleSelectOption("protocol", v)}
                   />
@@ -383,6 +470,7 @@ export function Contact() {
                     delay={0.8}
                     active={isInView}
                     expanded={expandedLine === "cipher"}
+                    isInsecure={!isOptionSecure("cipher", config.cipher)}
                     onToggle={() => handleToggleLine("cipher")}
                     onSelect={(v) => handleSelectOption("cipher", v)}
                   />
@@ -392,6 +480,7 @@ export function Contact() {
                     delay={1.1}
                     active={isInView}
                     expanded={expandedLine === "key_exchange"}
+                    isInsecure={!isOptionSecure("key_exchange", config.key_exchange)}
                     onToggle={() => handleToggleLine("key_exchange")}
                     onSelect={(v) => handleSelectOption("key_exchange", v)}
                   />
@@ -405,19 +494,46 @@ export function Contact() {
                     animate={{ opacity: 1, y: 0 }}
                     className="mb-8 mx-auto max-w-sm"
                   >
-                    <div className="border border-amber-400/30 bg-amber-400/[0.05] rounded-lg p-4 text-center">
-                      <p className="font-mono text-[11px] text-amber-400 tracking-wider mb-1">
-                        RECONFIGURE {pendingChange.key.toUpperCase()}
+                    <div className={`border rounded-lg p-4 text-center ${
+                      isPendingInsecure
+                        ? "border-red-400/30 bg-red-400/[0.05]"
+                        : "border-amber-400/30 bg-amber-400/[0.05]"
+                    }`}>
+                      {isPendingInsecure && (
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          <svg className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                          </svg>
+                          <p className="font-mono text-[11px] text-red-400 tracking-wider font-medium">
+                            SECURITY DOWNGRADE
+                          </p>
+                        </div>
+                      )}
+                      <p className={`font-mono text-[11px] tracking-wider mb-1 ${isPendingInsecure ? "text-red-400" : "text-amber-400"}`}>
+                        {isPendingInsecure ? "DOWNGRADE" : "RECONFIGURE"} {pendingChange.key.toUpperCase()}
                       </p>
-                      <p className="font-mono text-xs text-muted mb-4">
-                        Switch to <span className="text-foreground">{pendingChange.value}</span>? This will require re-authentication.
+                      <p className="font-mono text-xs text-muted mb-1">
+                        Switch to <span className={isPendingInsecure ? "text-red-400" : "text-foreground"}>{pendingChange.value}</span>?
                       </p>
+                      {isPendingInsecure ? (
+                        <p className="font-mono text-[10px] text-red-400/60 mb-4">
+                          This configuration is known to be vulnerable. Your connection will no longer be secure.
+                        </p>
+                      ) : (
+                        <p className="font-mono text-[10px] text-muted mb-4">
+                          This will require re-authentication.
+                        </p>
+                      )}
                       <div className="flex items-center justify-center gap-3">
                         <button
                           onClick={handleConfirmChange}
-                          className="px-4 py-1.5 font-mono text-[11px] tracking-wider text-emerald-400 border border-emerald-400/30 rounded bg-emerald-400/[0.05] hover:bg-emerald-400/10 transition-colors cursor-pointer"
+                          className={`px-4 py-1.5 font-mono text-[11px] tracking-wider border rounded transition-colors cursor-pointer ${
+                            isPendingInsecure
+                              ? "text-red-400 border-red-400/30 bg-red-400/[0.05] hover:bg-red-400/10"
+                              : "text-emerald-400 border-emerald-400/30 bg-emerald-400/[0.05] hover:bg-emerald-400/10"
+                          }`}
                         >
-                          CONFIRM
+                          {isPendingInsecure ? "PROCEED ANYWAY" : "CONFIRM"}
                         </button>
                         <button
                           onClick={handleCancelChange}
