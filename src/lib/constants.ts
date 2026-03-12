@@ -19,7 +19,6 @@ export const NAV_ITEMS = [
   { label: "Skills", href: "#skills" },
   { label: "Experience", href: "#experience" },
   { label: "Contact", href: "#contact" },
-  { label: "Resume", href: "/resume" },
 ] as const;
 
 export const SKILLS = [

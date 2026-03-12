@@ -5,20 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { NAV_ITEMS } from "@/lib/constants";
 
 const COMMANDS = [
-  ...NAV_ITEMS.filter((item) => item.href !== "/resume").map((item) => ({
+  ...NAV_ITEMS.map((item) => ({
     label: `Go to ${item.label}`,
     action: () => {
-      if (item.href.startsWith("#")) {
-        // On the homepage, scroll to the section
-        const el = document.querySelector(item.href);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth" });
-        } else {
-          // On a sub-page, navigate to homepage with hash
-          window.location.href = `/${item.href}`;
-        }
-      } else {
-        window.location.href = item.href;
+      const el = document.querySelector(item.href);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
       }
     },
     shortcut: "",
@@ -27,13 +19,6 @@ const COMMANDS = [
     label: "Go to Top",
     action: () => window.scrollTo({ top: 0, behavior: "smooth" }),
     shortcut: "Home",
-  },
-  {
-    label: "View Resume",
-    action: () => {
-      window.location.href = "/resume";
-    },
-    shortcut: "",
   },
 ];
 

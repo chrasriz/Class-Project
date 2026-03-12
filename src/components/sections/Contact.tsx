@@ -184,8 +184,6 @@ export function Contact() {
   useEffect(() => {
     if (emailRevealed && phase === "decrypting") {
       setPhase("revealed");
-      // Unlock resume access when connection is established
-      try { sessionStorage.setItem("resume_unlocked", "true"); } catch {}
     }
   }, [emailRevealed, phase]);
 

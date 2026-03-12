@@ -1,23 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS, SITE_CONFIG } from "@/lib/constants";
 import { navReveal } from "@/lib/animations";
 
 export function Navigation() {
-  const pathname = usePathname();
-  const isHome = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  // Resolve hash links to absolute paths when not on home page
-  const resolveHref = (href: string) => {
-    if (href.startsWith("#") && !isHome) return `/${href}`;
-    return href;
-  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -49,7 +40,7 @@ export function Navigation() {
       >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           {/* Logo */}
-          <a href={isHome ? "#" : "/"} className="relative group">
+          <a href="#" className="relative group">
             <span className="text-xl font-bold tracking-tight text-foreground">
               {SITE_CONFIG.name}
             </span>
@@ -62,25 +53,18 @@ export function Navigation() {
             {NAV_ITEMS.map((item) => (
               <a
                 key={item.href}
-                href={resolveHref(item.href)}
-                className={`relative px-4 py-2 text-sm text-muted hover:text-foreground transition-colors duration-300 group ${
-                  item.label === "Resume" ? "flex items-center gap-1.5" : ""
-                }`}
+                href={item.href}
+                className="relative px-4 py-2 text-sm text-muted hover:text-foreground transition-colors duration-300 group"
               >
-                {item.label === "Resume" && (
-                  <svg className="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                  </svg>
-                )}
                 {item.label}
                 <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[1px] bg-cyan/50 transition-all duration-300 group-hover:w-3/4" />
               </a>
             ))}
             <a
-              href={resolveHref("#contact")}
+              href="#contact"
               className="ml-4 px-5 py-2 text-sm font-medium text-cyan border border-cyan/30 rounded-lg hover:bg-cyan/10 transition-all duration-300"
             >
-              Connect
+              Get in Touch
             </a>
           </nav>
 
@@ -120,10 +104,10 @@ export function Navigation() {
               {NAV_ITEMS.map((item, i) => (
                 <motion.a
                   key={item.href}
-                  href={resolveHref(item.href)}
+                  href={item.href}
                   onClick={(e) => {
                     setMobileOpen(false);
-                    if (item.href.startsWith("#") && isHome) {
+                    if (item.href.startsWith("#")) {
                       e.preventDefault();
                       setTimeout(() => {
                         const el = document.querySelector(item.href);
@@ -134,15 +118,8 @@ export function Navigation() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 + 0.1 }}
-                  className={`text-2xl font-light text-foreground hover:text-cyan transition-colors ${
-                    item.label === "Resume" ? "flex items-center gap-2" : ""
-                  }`}
+                  className="text-2xl font-light text-foreground hover:text-cyan transition-colors"
                 >
-                  {item.label === "Resume" && (
-                    <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                    </svg>
-                  )}
                   {item.label}
                 </motion.a>
               ))}
