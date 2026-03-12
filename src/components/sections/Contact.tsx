@@ -40,7 +40,7 @@ function useScrambleText(target: string, active: boolean, speed = 40) {
     Array.from({ length: target.length }, () => CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)]).join("")
   );
   const [done, setDone] = useState(false);
-  const frameRef = useRef<ReturnType<typeof setInterval>>();
+  const frameRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const revealedRef = useRef(0);
 
   useEffect(() => {
