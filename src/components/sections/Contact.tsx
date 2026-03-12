@@ -163,8 +163,6 @@ export function Contact() {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
   const [phase, setPhase] = useState<"idle" | "scanning" | "decrypting" | "revealed">("idle");
-  const [copied, setCopied] = useState(false);
-
   const email = SITE_CONFIG.email;
   const { display: scrambledEmail, done: emailRevealed } = useScrambleText(
     email,
@@ -184,13 +182,6 @@ export function Contact() {
       setPhase("revealed");
     }
   }, [emailRevealed, phase]);
-
-  const handleCopyEmail = useCallback(() => {
-    navigator.clipboard.writeText(email).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }, [email]);
 
   // Matrix rain columns (deterministic positions)
   const matrixColumns = useRef(
@@ -306,29 +297,24 @@ export function Contact() {
                           <div className="absolute inset-0 blur-2xl bg-cyan/10 scale-150 pointer-events-none" />
                         )}
 
-                        <button
-                          onClick={handleCopyEmail}
-                          className="relative group cursor-pointer"
-                          aria-label={`Copy email: ${email}`}
-                        >
-                          <span
-                            className={`font-mono text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider transition-colors duration-500 ${
-                              phase === "revealed" ? "text-cyan" : "text-foreground/80"
-                            }`}
+                        {phase === "revealed" ? (
+                          <a
+                            href={`mailto:${email}`}
+                            className="relative group"
+                            aria-label={`Send email to ${email}`}
                           >
+                            <span className="font-mono text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-cyan hover:text-cyan/80 transition-colors duration-300">
+                              {scrambledEmail}
+                            </span>
+                            <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 font-mono text-[10px] tracking-wider text-subtle group-hover:text-cyan transition-colors duration-300">
+                              SEND EMAIL
+                            </span>
+                          </a>
+                        ) : (
+                          <span className="font-mono text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-foreground/80">
                             {scrambledEmail}
                           </span>
-
-                          <span className={`absolute -bottom-8 left-1/2 -translate-x-1/2 font-mono text-[10px] tracking-wider transition-all duration-300 ${
-                            phase === "revealed" ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
-                          }`}>
-                            {copied ? (
-                              <span className="text-emerald-400">COPIED TO CLIPBOARD</span>
-                            ) : (
-                              <span className="text-subtle group-hover:text-cyan">CLICK TO COPY</span>
-                            )}
-                          </span>
-                        </button>
+                        )}
                       </div>
 
                       <motion.div
