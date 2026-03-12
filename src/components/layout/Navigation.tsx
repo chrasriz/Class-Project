@@ -1,14 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS, SITE_CONFIG } from "@/lib/constants";
 import { navReveal } from "@/lib/animations";
 
 export function Navigation() {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Resolve hash links to absolute paths when not on home page
+  const resolveHref = (href: string) => {
+    if (href.startsWith("#") && !isHome) return `/${href}`;
+    return href;
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -40,7 +49,7 @@ export function Navigation() {
       >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           {/* Logo */}
-          <a href="#" className="relative group">
+          <a href={isHome ? "#" : "/"} className="relative group">
             <span className="text-xl font-bold tracking-tight text-foreground">
               {SITE_CONFIG.name}
             </span>
@@ -53,7 +62,7 @@ export function Navigation() {
             {NAV_ITEMS.map((item) => (
               <a
                 key={item.href}
-                href={item.href}
+                href={resolveHref(item.href)}
                 className={`relative px-4 py-2 text-sm text-muted hover:text-foreground transition-colors duration-300 group ${
                   item.label === "Resume" ? "flex items-center gap-1.5" : ""
                 }`}
@@ -68,7 +77,7 @@ export function Navigation() {
               </a>
             ))}
             <a
-              href="#contact"
+              href={resolveHref("#contact")}
               className="ml-4 px-5 py-2 text-sm font-medium text-cyan border border-cyan/30 rounded-lg hover:bg-cyan/10 transition-all duration-300"
             >
               Connect
@@ -111,10 +120,10 @@ export function Navigation() {
               {NAV_ITEMS.map((item, i) => (
                 <motion.a
                   key={item.href}
-                  href={item.href}
+                  href={resolveHref(item.href)}
                   onClick={(e) => {
                     setMobileOpen(false);
-                    if (item.href.startsWith("#")) {
+                    if (item.href.startsWith("#") && isHome) {
                       e.preventDefault();
                       setTimeout(() => {
                         const el = document.querySelector(item.href);
