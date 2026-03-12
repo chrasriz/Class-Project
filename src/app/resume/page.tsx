@@ -109,31 +109,46 @@ function LockedState() {
         transition={{ duration: 0.8, delay: 0.2 }}
         className="max-w-lg mx-auto px-6 text-center"
       >
-        <GlassPanel variant="card" className="p-12">
+        <GlassPanel variant="card" className="p-12 relative overflow-hidden">
+          {/* Scan line accent */}
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
+
+          {/* Terminal header */}
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+            <span className="font-mono text-[10px] tracking-[0.2em] text-amber-400/70 uppercase">
+              authorization required
+            </span>
+          </div>
+
           {/* Lock icon */}
-          <div className="w-20 h-20 mx-auto mb-8 rounded-full bg-amber-400/10 flex items-center justify-center">
+          <div className="w-20 h-20 mx-auto mb-8 rounded-full bg-amber-400/10 border border-amber-400/20 flex items-center justify-center">
             <svg className="w-10 h-10 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} role="img" aria-label="Locked">
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
             </svg>
           </div>
 
-          <h1 className="text-2xl font-bold text-foreground mb-4">
-            Resume Locked
+          <h1 className="text-2xl font-bold text-foreground mb-2 font-mono tracking-tight">
+            Clearance Denied
           </h1>
 
+          <p className="font-mono text-xs text-subtle mb-6 tracking-wider">
+            ERR_AUTH_0x4F2 — INSUFFICIENT CLEARANCE LEVEL
+          </p>
+
           <p className="text-muted leading-relaxed mb-3">
-            To view my full resume, please reach out first by sending me a message
-            through the contact form.
+            This document requires an established secure connection.
+            Scroll to the contact section and let the decryption sequence complete.
           </p>
 
           <p className="text-sm text-subtle mb-8">
-            Once you submit the &quot;Get in Touch&quot; form at{" "}
-            <span className="text-cyan font-mono">{SITE_CONFIG.email}</span>,
-            this page will unlock automatically.
+            Once the connection at{" "}
+            <span className="text-cyan font-mono">{SITE_CONFIG.email}</span>{" "}
+            is established, this page will unlock automatically.
           </p>
 
           <MagneticButton href="/#contact" variant="primary">
-            Go to Contact Form
+            Establish Connection
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
@@ -141,9 +156,9 @@ function LockedState() {
 
           <Link
             href="/"
-            className="block mt-6 text-sm text-muted hover:text-foreground transition-colors"
+            className="block mt-6 text-sm text-muted hover:text-foreground transition-colors font-mono text-xs tracking-wider"
           >
-            &larr; Back to portfolio
+            &larr; RETURN TO MAIN TERMINAL
           </Link>
         </GlassPanel>
       </motion.div>

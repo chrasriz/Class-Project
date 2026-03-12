@@ -100,7 +100,7 @@ export function Hero() {
             </svg>
           </MagneticButton>
           <MagneticButton href="#contact" variant="secondary">
-            Get in Touch
+            Establish Connection
           </MagneticButton>
         </motion.div>
 

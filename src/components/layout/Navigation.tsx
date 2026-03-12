@@ -71,7 +71,7 @@ export function Navigation() {
               href="#contact"
               className="ml-4 px-5 py-2 text-sm font-medium text-cyan border border-cyan/30 rounded-lg hover:bg-cyan/10 transition-all duration-300"
             >
-              Get in Touch
+              Connect
             </a>
           </nav>
 
