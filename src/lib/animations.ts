@@ -5,7 +5,7 @@ export const EASE = {
   smooth: [0.25, 0.1, 0.25, 1] as const,
   out: [0, 0, 0.2, 1] as const,
   spring: { type: "spring", stiffness: 100, damping: 20 } as Transition,
-  elastic: { type: "spring", stiffness: 200, damping: 15 } as Transition,
+  elastic: { type: "spring", stiffness: 150, damping: 30 } as Transition,
 };
 
 // Fade up variant for sections
