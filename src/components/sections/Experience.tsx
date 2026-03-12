@@ -5,6 +5,16 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { EXPERIENCE, CERTIFICATIONS } from "@/lib/constants";
 import { fadeUp, staggerContainer } from "@/lib/animations";
 
+const slideFromLeft = {
+  hidden: { opacity: 0, x: -120 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: [0.25, 0.1, 0.25, 1] as const } },
+};
+
+const slideFromRight = {
+  hidden: { opacity: 0, x: 120 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: [0.25, 0.1, 0.25, 1] as const } },
+};
+
 const TYPE_STYLES: Record<string, { color: string; label: string }> = {
   work: { color: "bg-cyan", label: "Work" },
   certification: { color: "bg-amber-400", label: "Certification" },
@@ -13,7 +23,7 @@ const TYPE_STYLES: Record<string, { color: string; label: string }> = {
 
 export function Experience() {
   return (
-    <section id="experience" className="section-padding">
+    <section id="experience" className="section-padding overflow-hidden">
       <div className="max-w-7xl mx-auto px-6">
         <SectionHeading
           label="Experience"
@@ -39,7 +49,7 @@ export function Experience() {
             return (
               <motion.div
                 key={`${item.title}-${item.period}`}
-                variants={fadeUp}
+                variants={isLeft ? slideFromLeft : slideFromRight}
                 className={`relative flex items-start gap-6 mb-12 ${
                   isLeft ? "md:flex-row" : "md:flex-row-reverse"
                 }`}

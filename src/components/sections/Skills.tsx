@@ -61,9 +61,12 @@ export function Skills() {
                   {category.items.map((skill) => (
                     <span
                       key={skill.name}
-                      className="px-3.5 py-2 text-sm text-muted bg-white/[0.03] border border-border rounded-lg hover:text-cyan hover:border-cyan/30 hover:bg-cyan/[0.04] hover:shadow-[0_0_12px_rgba(6,182,212,0.08)] transition-all duration-300 cursor-default"
+                      className="group/tag relative px-3.5 py-2 text-sm text-muted bg-white/[0.03] border border-border rounded-lg hover:text-cyan hover:border-cyan/30 hover:bg-cyan/[0.04] hover:shadow-[0_0_12px_rgba(6,182,212,0.08)] active:text-cyan active:border-cyan/30 transition-all duration-300 cursor-default"
                     >
                       {skill.name}
+                      <span className="inline-block ml-0 max-w-0 overflow-hidden opacity-0 group-hover/tag:ml-1.5 group-hover/tag:max-w-[3rem] group-hover/tag:opacity-100 group-active/tag:ml-1.5 group-active/tag:max-w-[3rem] group-active/tag:opacity-100 transition-all duration-300 font-mono text-xs text-cyan">
+                        {skill.level}%
+                      </span>
                     </span>
                   ))}
                 </div>
