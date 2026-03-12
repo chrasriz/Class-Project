@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ReactNode, type MouseEvent } from "react";
+import { useRef, useState, useCallback, type ReactNode, type MouseEvent } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -21,17 +21,24 @@ export function MagneticButton({
 }: MagneticButtonProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const rafId = useRef<number>(0);
 
-  const handleMouse = (e: MouseEvent) => {
+  const handleMouse = useCallback((e: MouseEvent) => {
     const el = ref.current;
     if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const x = (e.clientX - rect.left - rect.width / 2) * 0.2;
-    const y = (e.clientY - rect.top - rect.height / 2) * 0.2;
-    setPosition({ x, y });
-  };
+    cancelAnimationFrame(rafId.current);
+    rafId.current = requestAnimationFrame(() => {
+      const rect = el.getBoundingClientRect();
+      const x = (e.clientX - rect.left - rect.width / 2) * 0.2;
+      const y = (e.clientY - rect.top - rect.height / 2) * 0.2;
+      setPosition({ x, y });
+    });
+  }, []);
 
-  const reset = () => setPosition({ x: 0, y: 0 });
+  const reset = useCallback(() => {
+    cancelAnimationFrame(rafId.current);
+    setPosition({ x: 0, y: 0 });
+  }, []);
 
   const styles = {
     primary:
@@ -49,7 +56,7 @@ export function MagneticButton({
       onMouseLeave={reset}
       onTouchStart={reset}
       animate={{ x: position.x, y: position.y }}
-      transition={{ type: "spring", stiffness: 200, damping: 15 }}
+      transition={{ type: "spring", stiffness: 150, damping: 30, restDelta: 0.01 }}
       className={cn(
         "inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium tracking-wide transition-colors duration-300 cursor-pointer active:scale-95",
         styles,
