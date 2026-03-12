@@ -342,19 +342,7 @@ export function Contact() {
                 </motion.div>
 
                 {/* Channel cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <ChannelCard
-                    icon={
-                      <svg className="w-5 h-5 text-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-                      </svg>
-                    }
-                    label="Primary Channel"
-                    value={email}
-                    href={`mailto:${email}`}
-                    delay={1.8}
-                    active={phase === "revealed"}
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg mx-auto">
                   <ChannelCard
                     icon={
                       <svg className="w-5 h-5 text-cyan" fill="currentColor" viewBox="0 0 24 24">
@@ -364,7 +352,7 @@ export function Contact() {
                     label="Secure Network"
                     value="LinkedIn"
                     href={SITE_CONFIG.socials.linkedin}
-                    delay={2.0}
+                    delay={1.8}
                     active={phase === "revealed"}
                   />
                   <ChannelCard
@@ -376,7 +364,8 @@ export function Contact() {
                     }
                     label="Base Location"
                     value={SITE_CONFIG.location}
-                    delay={2.2}
+                    href={`https://maps.google.com/?q=${encodeURIComponent(SITE_CONFIG.location)}`}
+                    delay={2.0}
                     active={phase === "revealed"}
                   />
                 </div>
