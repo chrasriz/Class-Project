@@ -35,22 +35,36 @@ function MatrixColumn({ delay, duration, left }: { delay: number; duration: numb
 }
 
 // Scramble text hook — decrypts text character by character
-function useScrambleText(target: string, active: boolean, speed = 40) {
+// scrambleCycles = how many random-character ticks to show before the whole string starts resolving
+function useScrambleText(target: string, active: boolean, speed = 40, scrambleCycles = 12) {
   const [display, setDisplay] = useState(() =>
     Array.from({ length: target.length }, () => CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)]).join("")
   );
   const [done, setDone] = useState(false);
-  const frameRef = useRef<ReturnType<typeof setInterval>>();
-  const revealedRef = useRef(0);
+  const frameRef = useRef<ReturnType<typeof setInterval>>(undefined);
+  const tickRef = useRef(0);
 
   useEffect(() => {
     if (!active) return;
-    revealedRef.current = 0;
+    tickRef.current = 0;
     setDone(false);
 
     frameRef.current = setInterval(() => {
-      revealedRef.current += 1;
-      const revealed = revealedRef.current;
+      tickRef.current += 1;
+      const tick = tickRef.current;
+
+      // Phase 1: pure scramble — all characters stay random
+      if (tick <= scrambleCycles) {
+        const scrambled = target.split("").map((char) => {
+          if (char === " " || char === "@" || char === ".") return char;
+          return CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)];
+        });
+        setDisplay(scrambled.join(""));
+        return;
+      }
+
+      // Phase 2: reveal one character per tick
+      const revealed = tick - scrambleCycles;
 
       if (revealed > target.length) {
         clearInterval(frameRef.current);
@@ -69,7 +83,7 @@ function useScrambleText(target: string, active: boolean, speed = 40) {
     }, speed);
 
     return () => clearInterval(frameRef.current);
-  }, [active, target, speed]);
+  }, [active, target, speed, scrambleCycles]);
 
   return { display, done };
 }
@@ -155,7 +169,7 @@ export function Contact() {
   const { display: scrambledEmail, done: emailRevealed } = useScrambleText(
     email,
     phase === "decrypting" || phase === "revealed",
-    50
+    120
   );
 
   // Phase sequencing
@@ -170,8 +184,6 @@ export function Contact() {
   useEffect(() => {
     if (emailRevealed && phase === "decrypting") {
       setPhase("revealed");
-      // Unlock resume access when connection is established
-      try { localStorage.setItem("resume_unlocked", "true"); } catch {}
     }
   }, [emailRevealed, phase]);
 
