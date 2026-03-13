@@ -179,10 +179,10 @@ export function LoadingScreen() {
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
             <div className="flex items-baseline">
-              {/* Name characters */}
+              {/* Name characters — only visible once scramble starts */}
               <motion.span
                 initial={{ opacity: 0 }}
-                animate={phase !== "init" ? { opacity: 1 } : {}}
+                animate={phase === "scramble" || phase === "decrypt" || phase === "done" ? { opacity: 1 } : {}}
                 transition={{ duration: 0.3 }}
                 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-bold font-mono inline-block tracking-tight"
                 style={{
