@@ -10,10 +10,11 @@ import { About } from "@/components/sections/About";
 import { Skills } from "@/components/sections/Skills";
 import { Experience } from "@/components/sections/Experience";
 import { Contact } from "@/components/sections/Contact";
+import { HackedProvider } from "@/lib/hacked-context";
 
 export default function Home() {
   return (
-    <>
+    <HackedProvider>
       <LoadingScreen />
       <AmbientBackground />
       <CommandPalette />
@@ -38,6 +39,6 @@ export default function Home() {
       </main>
 
       <Footer />
-    </>
+    </HackedProvider>
   );
 }

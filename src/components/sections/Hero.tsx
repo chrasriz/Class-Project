@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { SITE_CONFIG } from "@/lib/constants";
 import { MagneticButton } from "@/components/ui/MagneticButton";
+import { HackedOverlay } from "@/components/ui/HackedOverlay";
 
 const TITLES = [
   "Cybersecurity Analyst",
@@ -26,6 +27,7 @@ export function Hero() {
       id="hero"
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
     >
+      <HackedOverlay />
       {/* Hero glow */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-cyan/5 rounded-full blur-[150px] pointer-events-none" />
 

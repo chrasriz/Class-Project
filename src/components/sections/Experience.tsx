@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { EXPERIENCE, CERTIFICATIONS } from "@/lib/constants";
 import { fadeUp, staggerContainer } from "@/lib/animations";
+import { HackedOverlay } from "@/components/ui/HackedOverlay";
 
 const slideFromLeft = {
   hidden: { opacity: 0, x: -120 },
@@ -23,7 +24,8 @@ const TYPE_STYLES: Record<string, { color: string; label: string }> = {
 
 export function Experience() {
   return (
-    <section id="experience" className="section-padding overflow-hidden">
+    <section id="experience" className="section-padding overflow-hidden relative">
+      <HackedOverlay />
       <div className="max-w-7xl mx-auto px-6">
         <SectionHeading
           label="Experience"

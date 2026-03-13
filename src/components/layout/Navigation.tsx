@@ -1,14 +1,57 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS, SITE_CONFIG } from "@/lib/constants";
 import { navReveal } from "@/lib/animations";
+import { useHacked } from "@/lib/hacked-context";
+
+const CIPHER_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*!?";
+
+function useScrambledLabel(text: string, active: boolean) {
+  const [display, setDisplay] = useState(text);
+  const frameRef = useRef<ReturnType<typeof setInterval>>(undefined);
+
+  useEffect(() => {
+    if (!active) {
+      setDisplay(text);
+      clearInterval(frameRef.current);
+      return;
+    }
+    // Continuously scramble while active
+    frameRef.current = setInterval(() => {
+      setDisplay(
+        text
+          .split("")
+          .map((ch) =>
+            ch === " " ? " " : CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)]
+          )
+          .join("")
+      );
+    }, 80);
+    return () => clearInterval(frameRef.current);
+  }, [active, text]);
+
+  return display;
+}
+
+function NavLabel({ label, isContact }: { label: string; isContact: boolean }) {
+  const { isHacked } = useHacked();
+  const scrambled = useScrambledLabel(label, isHacked && !isContact);
+  return <>{scrambled}</>;
+}
+
+function LogoLabel() {
+  const { isHacked } = useHacked();
+  const scrambled = useScrambledLabel(SITE_CONFIG.name, isHacked);
+  return <>{scrambled}</>;
+}
 
 export function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { isHacked } = useHacked();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -42,7 +85,7 @@ export function Navigation() {
           {/* Logo */}
           <a href="#" className="relative group">
             <span className="text-xl font-bold tracking-tight text-foreground">
-              {SITE_CONFIG.name}
+              <LogoLabel />
             </span>
             <span className="text-cyan ml-0.5">.</span>
             <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-cyan transition-all duration-300 group-hover:w-full" />
@@ -54,17 +97,25 @@ export function Navigation() {
               <a
                 key={item.href}
                 href={item.href}
-                className="relative px-4 py-2 text-sm text-muted hover:text-foreground transition-colors duration-300 group"
+                className={cn(
+                  "relative px-4 py-2 text-sm transition-colors duration-300 group",
+                  isHacked && item.label !== "Contact" ? "text-red-400/60 pointer-events-none" : "text-muted hover:text-foreground"
+                )}
               >
-                {item.label}
+                <NavLabel label={item.label} isContact={item.label === "Contact"} />
                 <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[1px] bg-cyan/50 transition-all duration-300 group-hover:w-3/4" />
               </a>
             ))}
             <a
               href="#contact"
-              className="ml-4 px-5 py-2 text-sm font-medium text-cyan border border-cyan/30 rounded-lg hover:bg-cyan/10 transition-all duration-300"
+              className={cn(
+                "ml-4 px-5 py-2 text-sm font-medium border rounded-lg transition-all duration-300",
+                isHacked
+                  ? "text-red-400 border-red-400/30 hover:bg-red-400/10 animate-pulse"
+                  : "text-cyan border-cyan/30 hover:bg-cyan/10"
+              )}
             >
-              Get in Touch
+              {isHacked ? "FIX NOW" : "Get in Touch"}
             </a>
           </nav>
 
@@ -118,9 +169,14 @@ export function Navigation() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 + 0.1 }}
-                  className="text-2xl font-light text-foreground hover:text-cyan transition-colors"
+                  className={cn(
+                    "text-2xl font-light transition-colors",
+                    isHacked && item.label !== "Contact"
+                      ? "text-red-400/60 pointer-events-none"
+                      : "text-foreground hover:text-cyan"
+                  )}
                 >
-                  {item.label}
+                  <NavLabel label={item.label} isContact={item.label === "Contact"} />
                 </motion.a>
               ))}
             </nav>

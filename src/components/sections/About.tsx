@@ -6,6 +6,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { CERTIFICATIONS, EXPERIENCE } from "@/lib/constants";
 import { fadeUp, staggerContainer } from "@/lib/animations";
+import { HackedOverlay } from "@/components/ui/HackedOverlay";
 
 const STATS = [
   { value: "200+", label: "IT Issues Resolved", clickable: false },
@@ -116,7 +117,8 @@ export function About() {
   const [activeModal, setActiveModal] = useState<ModalType>(null);
 
   return (
-    <section id="about" className="section-padding">
+    <section id="about" className="section-padding relative">
+      <HackedOverlay />
       <div className="max-w-7xl mx-auto px-6">
         <SectionHeading
           label="About"

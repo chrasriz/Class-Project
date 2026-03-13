@@ -438,6 +438,83 @@ body {
   border-radius: 4px;
 }
 
+/* ═══ Hacked / Compromised Mode ═══ */
+html[data-hacked="true"] {
+  --color-cyan: #ef4444 !important;
+  --color-cyan-dim: rgba(239, 68, 68, 0.15) !important;
+  --color-cyan-glow: rgba(239, 68, 68, 0.25) !important;
+  --glow-cyan: 0 0 30px rgba(239, 68, 68, 0.15) !important;
+}
+
+html[data-hacked="true"] .text-gradient {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+}
+
+html[data-hacked="true"] .text-gradient-cyan {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+}
+
+html[data-hacked="true"] .glow-line {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(239, 68, 68, 0.3),
+    transparent
+  ) !important;
+}
+
+html[data-hacked="true"] .glass-card:hover {
+  border-color: rgba(239, 68, 68, 0.15) !important;
+}
+
+html[data-hacked="true"] .pulse-ring {
+  background-color: #ef4444 !important;
+}
+
+html[data-hacked="true"] .pulse-ring + span {
+  background-color: #ef4444 !important;
+}
+
+html[data-hacked="true"] .scan-line {
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.3), 0 0 40px rgba(239, 68, 68, 0.1) !important;
+}
+
+html[data-hacked="true"] .matrix-column {
+  color: rgba(239, 68, 68, 0.3) !important;
+}
+
+html[data-hacked="true"] .ambient-orb-1,
+html[data-hacked="true"] .ambient-orb-2,
+html[data-hacked="true"] .ambient-orb-3 {
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.2), transparent 70%) !important;
+}
+
+/* Scrambled text overlay for sections when hacked */
+.hacked-scramble-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 5, 8, 0.85);
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+}
+
+@keyframes hackedPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.hacked-text-pulse {
+  animation: hackedPulse 1.5s ease-in-out infinite;
+}
+
 /* ═══ Safe area insets for notched devices ═══ */
 @supports (padding: env(safe-area-inset-bottom)) {
   body {
