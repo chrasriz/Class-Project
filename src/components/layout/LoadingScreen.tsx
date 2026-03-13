@@ -59,7 +59,7 @@ export function LoadingScreen() {
   // Phase sequencing
   useEffect(() => {
     const decryptEnd = 2200 + NAME.length * 150 + 300;
-    const glitchStart = decryptEnd + 2500; // 2.5s to read subtitle
+    const glitchStart = decryptEnd + 1150; // 50ms after subtitle + tagline fully appear
     const exitTime = glitchStart + 700; // glitch lasts ~700ms then fade out
 
     const timers = [
