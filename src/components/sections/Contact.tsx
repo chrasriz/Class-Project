@@ -6,6 +6,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { SITE_CONFIG } from "@/lib/constants";
 import { fadeUp } from "@/lib/animations";
+import { useHacked } from "@/lib/hacked-context";
 
 // Characters used for the scramble effect
 const CIPHER_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*!?<>{}[]=/\\|~^";
@@ -320,8 +321,9 @@ function ChannelCard({
 export function Contact() {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
-  const [phase, setPhase] = useState<"idle" | "scanning" | "decrypting" | "revealed">("idle");
+  const [phase, setPhase] = useState<"idle" | "scanning" | "decrypting" | "revealed" | "hacked">("idle");
   const email = SITE_CONFIG.email;
+  const { isHacked, setHacked } = useHacked();
   const { display: scrambledEmail, done: emailRevealed, reset: resetScramble } = useScrambleText(
     email,
     phase === "decrypting",
@@ -368,7 +370,8 @@ export function Contact() {
 
   const handleConfirmChange = useCallback(() => {
     if (!pendingChange) return;
-    setConfig((prev) => ({ ...prev, [pendingChange.key]: pendingChange.value }));
+    const newConfig = { ...config, [pendingChange.key]: pendingChange.value };
+    setConfig(newConfig);
     setPendingChange(null);
     setExpandedLine(null);
     // Reset decrypt so user has to re-decrypt with new config
@@ -376,7 +379,19 @@ export function Contact() {
       setPhase("idle");
       resetScramble();
     }
-  }, [pendingChange, phase, resetScramble]);
+    // If hacked and config is now becoming more secure, clear hacked state on next decrypt
+    // (hacked state will be cleared when user successfully decrypts with secure config)
+    if (isHacked) {
+      // Check if new config is secure
+      const newSecure =
+        isOptionSecure("protocol", newConfig.protocol) &&
+        isOptionSecure("cipher", newConfig.cipher) &&
+        isOptionSecure("key_exchange", newConfig.key_exchange);
+      if (newSecure) {
+        // Don't clear hacked yet — user needs to decrypt again
+      }
+    }
+  }, [pendingChange, phase, resetScramble, config, isHacked]);
 
   const handleCancelChange = useCallback(() => {
     setPendingChange(null);
@@ -386,15 +401,42 @@ export function Contact() {
   const handleDecrypt = useCallback(() => {
     if (phase !== "idle") return;
     setExpandedLine(null);
+
+    // If currently hacked and config is now secure, decrypt normally and revert
+    if (isHacked && isSecure) {
+      setPhase("scanning");
+      setTimeout(() => {
+        setPhase("decrypting");
+      }, 1500);
+      // The emailRevealed effect below will handle clearing hacked state
+      return;
+    }
+
+    // If critically insecure, start decrypt then trigger hacked mode after 50ms
+    if (isCriticallyInsecure) {
+      setPhase("decrypting");
+      setTimeout(() => {
+        setPhase("hacked");
+        setHacked(true);
+        resetScramble();
+      }, 50);
+      return;
+    }
+
+    // Normal decrypt flow
     setPhase("scanning");
     setTimeout(() => setPhase("decrypting"), 1500);
-  }, [phase]);
+  }, [phase, isCriticallyInsecure, isHacked, isSecure, setHacked, resetScramble]);
 
   useEffect(() => {
     if (emailRevealed && phase === "decrypting") {
       setPhase("revealed");
+      // If we were hacked and decryption succeeds (secure config), clear hacked state
+      if (isHacked && isSecure) {
+        setHacked(false);
+      }
     }
-  }, [emailRevealed, phase]);
+  }, [emailRevealed, phase, isHacked, isSecure, setHacked]);
 
   // Matrix rain columns (deterministic positions)
   const matrixColumns = useRef(
@@ -589,46 +631,65 @@ export function Contact() {
                     /* Decrypt button — shown before user initiates */
                     <div>
                       <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-subtle mb-6">
-                        {isCriticallyInsecure
-                          ? "/// connection refused ///"
+                        {isHacked
+                          ? "/// system compromised ///"
+                          : isCriticallyInsecure
+                          ? "/// critical vulnerability detected ///"
                           : "/// encrypted transmission ready ///"}
                       </p>
                       <span className="block font-mono text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-foreground/20 mb-8 select-none">
                         {"█".repeat(email.length)}
                       </span>
 
-                      {/* Critically insecure policy block */}
-                      {isCriticallyInsecure ? (
-                        <div className="max-w-sm mx-auto border border-red-500/30 bg-red-500/[0.06] rounded-lg p-5 text-center">
-                          <div className="flex items-center justify-center gap-2 mb-3">
-                            <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                            </svg>
-                            <span className="font-mono text-xs tracking-wider text-red-500 font-medium">
-                              POLICY VIOLATION
-                            </span>
-                          </div>
-                          <p className="font-mono text-[11px] text-red-400 leading-relaxed mb-2">
-                            CONNECTION REFUSED — ERR_SECURITY_POLICY
-                          </p>
-                          <p className="font-mono text-[10px] text-red-400/60 leading-relaxed">
-                            Multiple critical vulnerabilities detected in channel configuration.
-                            Security policy prohibits transmission over fatally compromised channels.
-                            Reconfigure to secure parameters to proceed.
-                          </p>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={handleDecrypt}
-                          className="inline-flex items-center gap-2.5 px-6 py-3 font-mono text-sm tracking-wider text-cyan border border-cyan/30 rounded-lg bg-cyan/[0.05] hover:bg-cyan/10 hover:border-cyan/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] active:scale-95 transition-all duration-300 cursor-pointer"
-                        >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                          </svg>
-                          DECRYPT SIGNAL
-                        </button>
-                      )}
+                      <button
+                        onClick={handleDecrypt}
+                        className={`inline-flex items-center gap-2.5 px-6 py-3 font-mono text-sm tracking-wider border rounded-lg active:scale-95 transition-all duration-300 cursor-pointer ${
+                          isHacked
+                            ? "text-emerald-400 border-emerald-400/30 bg-emerald-400/[0.05] hover:bg-emerald-400/10 hover:border-emerald-400/50"
+                            : "text-cyan border-cyan/30 bg-cyan/[0.05] hover:bg-cyan/10 hover:border-cyan/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)]"
+                        }`}
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                        </svg>
+                        {isHacked ? "RESTORE SYSTEM" : "DECRYPT SIGNAL"}
+                      </button>
                     </div>
+                  ) : phase === "hacked" ? (
+                    /* Hacked / policy violation state */
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-red-400 mb-6">
+                        /// SYSTEM BREACH DETECTED ///
+                      </p>
+                      <span className="block font-mono text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-red-500/40 mb-8 select-none hacked-text-pulse">
+                        {"█".repeat(email.length)}
+                      </span>
+                      <div className="max-w-sm mx-auto border border-red-500/30 bg-red-500/[0.06] rounded-lg p-5 text-center">
+                        <div className="flex items-center justify-center gap-2 mb-3">
+                          <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                          </svg>
+                          <span className="font-mono text-xs tracking-wider text-red-500 font-medium hacked-text-pulse">
+                            POLICY VIOLATION
+                          </span>
+                        </div>
+                        <p className="font-mono text-[11px] text-red-400 leading-relaxed mb-2">
+                          FATAL BREACH — ERR_TOTAL_COMPROMISE
+                        </p>
+                        <p className="font-mono text-[10px] text-red-400/60 leading-relaxed mb-4">
+                          All security layers bypassed. Channel integrity destroyed.
+                          Reconfigure all parameters to secure values and re-authenticate
+                          to restore system integrity.
+                        </p>
+                        <p className="font-mono text-[9px] text-red-400/40 tracking-wider">
+                          HINT: Change settings above to recommended values, then decrypt again.
+                        </p>
+                      </div>
+                    </motion.div>
                   ) : (
                     /* Scanning / Decrypting / Revealed states */
                     <div>

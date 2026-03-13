@@ -5,6 +5,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { SKILLS } from "@/lib/constants";
 import { fadeUp, staggerContainer } from "@/lib/animations";
+import { HackedOverlay } from "@/components/ui/HackedOverlay";
 
 // Per-category hover color themes
 const CATEGORY_COLORS: Record<string, { text: string; border: string; bg: string; shadow: string }> = {
@@ -59,7 +60,8 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 
 export function Skills() {
   return (
-    <section id="skills" className="section-padding">
+    <section id="skills" className="section-padding relative">
+      <HackedOverlay />
       <div className="max-w-7xl mx-auto px-6">
         <SectionHeading
           label="Capabilities"
