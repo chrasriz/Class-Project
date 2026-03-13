@@ -35,19 +35,31 @@ function MatrixColumn({ delay, duration, left }: { delay: number; duration: numb
 }
 
 // Scramble text hook — decrypts text character by character
-// scrambleCycles = how many random-character ticks to show before the whole string starts resolving
+// scrambleCycles = how many random-character ticks before letters start resolving
 function useScrambleText(target: string, active: boolean, speed = 40, scrambleCycles = 12) {
-  const [display, setDisplay] = useState(() =>
-    Array.from({ length: target.length }, () => CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)]).join("")
-  );
+  const blocks = "█".repeat(target.length);
+  const [display, setDisplay] = useState(blocks);
   const [done, setDone] = useState(false);
   const frameRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const tickRef = useRef(0);
+  const prevActiveRef = useRef(false);
 
   useEffect(() => {
-    if (!active) return;
+    // When active transitions from true → false and we're done, keep the final value
+    if (!active) {
+      clearInterval(frameRef.current);
+      // If we never started or need a reset, show blocks
+      if (!done) {
+        setDisplay(blocks);
+      }
+      prevActiveRef.current = false;
+      return;
+    }
+
+    // Starting fresh — reset state
     tickRef.current = 0;
     setDone(false);
+    prevActiveRef.current = true;
 
     frameRef.current = setInterval(() => {
       tickRef.current += 1;
@@ -55,11 +67,15 @@ function useScrambleText(target: string, active: boolean, speed = 40, scrambleCy
 
       // Phase 1: pure scramble — all characters stay random
       if (tick <= scrambleCycles) {
-        const scrambled = target.split("").map((char) => {
-          if (char === " " || char === "@" || char === ".") return char;
-          return CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)];
-        });
-        setDisplay(scrambled.join(""));
+        setDisplay(
+          target
+            .split("")
+            .map((char) => {
+              if (char === " " || char === "@" || char === ".") return char;
+              return CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)];
+            })
+            .join("")
+        );
         return;
       }
 
@@ -73,19 +89,31 @@ function useScrambleText(target: string, active: boolean, speed = 40, scrambleCy
         return;
       }
 
-      const result = target.split("").map((char, i) => {
-        if (i < revealed) return char;
-        if (char === " " || char === "@" || char === ".") return char;
-        return CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)];
-      });
-
-      setDisplay(result.join(""));
+      setDisplay(
+        target
+          .split("")
+          .map((char, i) => {
+            if (i < revealed) return char;
+            if (char === " " || char === "@" || char === ".") return char;
+            return CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)];
+          })
+          .join("")
+      );
     }, speed);
 
     return () => clearInterval(frameRef.current);
-  }, [active, target, speed, scrambleCycles]);
+  }, [active, target, speed, scrambleCycles, blocks, done]);
 
-  return { display, done };
+  // Reset function — call when config changes to go back to blocks
+  const reset = useCallback(() => {
+    clearInterval(frameRef.current);
+    setDisplay(blocks);
+    setDone(false);
+    tickRef.current = 0;
+    prevActiveRef.current = false;
+  }, [blocks]);
+
+  return { display, done, reset };
 }
 
 // Config options with security ratings
@@ -294,9 +322,9 @@ export function Contact() {
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
   const [phase, setPhase] = useState<"idle" | "scanning" | "decrypting" | "revealed">("idle");
   const email = SITE_CONFIG.email;
-  const { display: scrambledEmail, done: emailRevealed } = useScrambleText(
+  const { display: scrambledEmail, done: emailRevealed, reset: resetScramble } = useScrambleText(
     email,
-    phase === "decrypting" || phase === "revealed",
+    phase === "decrypting",
     120
   );
 
@@ -314,6 +342,14 @@ export function Contact() {
     isOptionSecure("protocol", config.protocol) &&
     isOptionSecure("cipher", config.cipher) &&
     isOptionSecure("key_exchange", config.key_exchange);
+
+  // Count how many config options are insecure
+  const insecureCount = [
+    !isOptionSecure("protocol", config.protocol),
+    !isOptionSecure("cipher", config.cipher),
+    !isOptionSecure("key_exchange", config.key_exchange),
+  ].filter(Boolean).length;
+  const isCriticallyInsecure = insecureCount >= 2;
 
   // Check if the pending change would make things insecure
   const isPendingInsecure = pendingChange ? !isOptionSecure(pendingChange.key, pendingChange.value) : false;
@@ -338,8 +374,9 @@ export function Contact() {
     // Reset decrypt so user has to re-decrypt with new config
     if (phase !== "idle") {
       setPhase("idle");
+      resetScramble();
     }
-  }, [pendingChange, phase]);
+  }, [pendingChange, phase, resetScramble]);
 
   const handleCancelChange = useCallback(() => {
     setPendingChange(null);
@@ -552,25 +589,51 @@ export function Contact() {
                     /* Decrypt button — shown before user initiates */
                     <div>
                       <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-subtle mb-6">
-                        /// encrypted transmission ready ///
+                        {isCriticallyInsecure
+                          ? "/// connection refused ///"
+                          : "/// encrypted transmission ready ///"}
                       </p>
                       <span className="block font-mono text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-foreground/20 mb-8 select-none">
                         {"█".repeat(email.length)}
                       </span>
-                      <button
-                        onClick={handleDecrypt}
-                        className="inline-flex items-center gap-2.5 px-6 py-3 font-mono text-sm tracking-wider text-cyan border border-cyan/30 rounded-lg bg-cyan/[0.05] hover:bg-cyan/10 hover:border-cyan/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] active:scale-95 transition-all duration-300 cursor-pointer"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                        </svg>
-                        DECRYPT SIGNAL
-                      </button>
+
+                      {/* Critically insecure policy block */}
+                      {isCriticallyInsecure ? (
+                        <div className="max-w-sm mx-auto border border-red-500/30 bg-red-500/[0.06] rounded-lg p-5 text-center">
+                          <div className="flex items-center justify-center gap-2 mb-3">
+                            <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                            </svg>
+                            <span className="font-mono text-xs tracking-wider text-red-500 font-medium">
+                              POLICY VIOLATION
+                            </span>
+                          </div>
+                          <p className="font-mono text-[11px] text-red-400 leading-relaxed mb-2">
+                            CONNECTION REFUSED — ERR_SECURITY_POLICY
+                          </p>
+                          <p className="font-mono text-[10px] text-red-400/60 leading-relaxed">
+                            Multiple critical vulnerabilities detected in channel configuration.
+                            Security policy prohibits transmission over fatally compromised channels.
+                            Reconfigure to secure parameters to proceed.
+                          </p>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={handleDecrypt}
+                          className="inline-flex items-center gap-2.5 px-6 py-3 font-mono text-sm tracking-wider text-cyan border border-cyan/30 rounded-lg bg-cyan/[0.05] hover:bg-cyan/10 hover:border-cyan/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] active:scale-95 transition-all duration-300 cursor-pointer"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                          </svg>
+                          DECRYPT SIGNAL
+                        </button>
+                      )}
                     </div>
                   ) : (
-                    /* Decrypting / revealed states */
+                    /* Scanning / Decrypting / Revealed states */
                     <div>
                       <motion.p
+                        key={phase}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.5 }}
@@ -586,20 +649,27 @@ export function Contact() {
                           <div className="absolute inset-0 blur-2xl bg-cyan/10 scale-150 pointer-events-none" />
                         )}
 
-                        {phase === "revealed" ? (
+                        {phase === "scanning" ? (
+                          /* During scanning, show blocks */
+                          <span className="font-mono text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-foreground/20 select-none">
+                            {"█".repeat(email.length)}
+                          </span>
+                        ) : phase === "revealed" ? (
+                          /* Once revealed, show the real email as mailto link */
                           <a
                             href={`mailto:${email}`}
                             className="relative group"
                             aria-label={`Send email to ${email}`}
                           >
                             <span className="font-mono text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-cyan hover:text-cyan/80 transition-colors duration-300">
-                              {scrambledEmail}
+                              {email}
                             </span>
-                            <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 font-mono text-[10px] tracking-wider text-subtle group-hover:text-cyan transition-colors duration-300">
+                            <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 font-mono text-[10px] tracking-wider text-subtle group-hover:text-cyan transition-colors duration-300 whitespace-nowrap">
                               SEND EMAIL
                             </span>
                           </a>
                         ) : (
+                          /* During decrypting, show the scramble animation */
                           <span className="font-mono text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-foreground/80">
                             {scrambledEmail}
                           </span>
@@ -610,7 +680,7 @@ export function Contact() {
                         initial={{ scaleX: 0 }}
                         animate={phase === "revealed" ? { scaleX: 1 } : {}}
                         transition={{ delay: 0.3, duration: 0.8, ease: [0.25, 0.1, 0.25, 1] as const }}
-                        className="mt-4 mx-auto h-[1px] max-w-xs bg-gradient-to-r from-transparent via-cyan/40 to-transparent origin-center"
+                        className="mt-12 mx-auto h-[1px] max-w-xs bg-gradient-to-r from-transparent via-cyan/40 to-transparent origin-center"
                       />
                     </div>
                   )}
