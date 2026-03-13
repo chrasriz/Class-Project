@@ -315,6 +315,14 @@ export function Contact() {
     isOptionSecure("cipher", config.cipher) &&
     isOptionSecure("key_exchange", config.key_exchange);
 
+  // Count how many config options are insecure
+  const insecureCount = [
+    !isOptionSecure("protocol", config.protocol),
+    !isOptionSecure("cipher", config.cipher),
+    !isOptionSecure("key_exchange", config.key_exchange),
+  ].filter(Boolean).length;
+  const isCriticallyInsecure = insecureCount >= 2;
+
   // Check if the pending change would make things insecure
   const isPendingInsecure = pendingChange ? !isOptionSecure(pendingChange.key, pendingChange.value) : false;
 
@@ -552,20 +560,45 @@ export function Contact() {
                     /* Decrypt button — shown before user initiates */
                     <div>
                       <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-subtle mb-6">
-                        /// encrypted transmission ready ///
+                        {isCriticallyInsecure
+                          ? "/// connection refused ///"
+                          : "/// encrypted transmission ready ///"}
                       </p>
                       <span className="block font-mono text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-foreground/20 mb-8 select-none">
                         {"█".repeat(email.length)}
                       </span>
-                      <button
-                        onClick={handleDecrypt}
-                        className="inline-flex items-center gap-2.5 px-6 py-3 font-mono text-sm tracking-wider text-cyan border border-cyan/30 rounded-lg bg-cyan/[0.05] hover:bg-cyan/10 hover:border-cyan/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] active:scale-95 transition-all duration-300 cursor-pointer"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                        </svg>
-                        DECRYPT SIGNAL
-                      </button>
+
+                      {/* Critically insecure policy block */}
+                      {isCriticallyInsecure ? (
+                        <div className="max-w-sm mx-auto border border-red-500/30 bg-red-500/[0.06] rounded-lg p-5 text-center">
+                          <div className="flex items-center justify-center gap-2 mb-3">
+                            <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                            </svg>
+                            <span className="font-mono text-xs tracking-wider text-red-500 font-medium">
+                              POLICY VIOLATION
+                            </span>
+                          </div>
+                          <p className="font-mono text-[11px] text-red-400 leading-relaxed mb-2">
+                            CONNECTION REFUSED — ERR_SECURITY_POLICY
+                          </p>
+                          <p className="font-mono text-[10px] text-red-400/60 leading-relaxed">
+                            Multiple critical vulnerabilities detected in channel configuration.
+                            Security policy prohibits transmission over fatally compromised channels.
+                            Reconfigure to secure parameters to proceed.
+                          </p>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={handleDecrypt}
+                          className="inline-flex items-center gap-2.5 px-6 py-3 font-mono text-sm tracking-wider text-cyan border border-cyan/30 rounded-lg bg-cyan/[0.05] hover:bg-cyan/10 hover:border-cyan/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] active:scale-95 transition-all duration-300 cursor-pointer"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                          </svg>
+                          DECRYPT SIGNAL
+                        </button>
+                      )}
                     </div>
                   ) : (
                     /* Decrypting / revealed states */
@@ -610,7 +643,7 @@ export function Contact() {
                         initial={{ scaleX: 0 }}
                         animate={phase === "revealed" ? { scaleX: 1 } : {}}
                         transition={{ delay: 0.3, duration: 0.8, ease: [0.25, 0.1, 0.25, 1] as const }}
-                        className="mt-4 mx-auto h-[1px] max-w-xs bg-gradient-to-r from-transparent via-cyan/40 to-transparent origin-center"
+                        className="mt-12 mx-auto h-[1px] max-w-xs bg-gradient-to-r from-transparent via-cyan/40 to-transparent origin-center"
                       />
                     </div>
                   )}
