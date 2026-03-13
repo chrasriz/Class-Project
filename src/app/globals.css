@@ -324,6 +324,78 @@ body {
   animation: loadingPulse 1.5s ease-in-out infinite;
 }
 
+/* CRT signal glitch */
+@keyframes crtGlitch {
+  0%   { transform: translate(0, 0) skewX(0deg); opacity: 1; }
+  5%   { transform: translate(-8px, 2px) skewX(-2deg); opacity: 0.8; }
+  10%  { transform: translate(6px, -1px) skewX(1.5deg); opacity: 1; }
+  15%  { transform: translate(0, 0) skewX(0deg); opacity: 0; }
+  20%  { transform: translate(0, 0) skewX(0deg); opacity: 1; }
+  25%  { transform: translate(4px, 3px) skewX(3deg); opacity: 0.6; }
+  30%  { transform: translate(-3px, -2px) skewX(-1deg); opacity: 1; }
+  35%  { transform: translate(0, 0) skewX(0deg); opacity: 0; }
+  40%  { transform: translate(0, 0) skewX(0deg); opacity: 0.9; }
+  50%  { transform: translate(10px, 1px) skewX(2deg); opacity: 1; }
+  55%  { transform: translate(0, 0) skewX(0deg); opacity: 0; }
+  60%  { transform: translate(-5px, 0) skewX(-1.5deg); opacity: 0.7; }
+  65%  { transform: translate(0, 0) skewX(0deg); opacity: 1; }
+  75%  { transform: translate(3px, -2px) skewX(1deg); opacity: 0; }
+  80%  { transform: translate(0, 0) skewX(0deg); opacity: 0.5; }
+  85%  { transform: translate(-7px, 1px) skewX(-2.5deg); opacity: 1; }
+  90%  { transform: translate(0, 0) skewX(0deg); opacity: 0; }
+  95%  { transform: translate(2px, 0) skewX(0.5deg); opacity: 0.3; }
+  100% { transform: translate(0, 0) skewX(0deg); opacity: 0; }
+}
+
+.crt-glitch {
+  animation: crtGlitch 0.6s steps(2, end) forwards;
+}
+
+/* Horizontal tear lines that sweep across during glitch */
+@keyframes scanTear {
+  0%   { top: -10%; }
+  100% { top: 110%; }
+}
+
+.glitch-tear {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(6, 182, 212, 0.4);
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.3);
+  pointer-events: none;
+  animation: scanTear 0.15s linear infinite;
+}
+
+/* RGB channel split overlay */
+@keyframes rgbSplit {
+  0%, 100% { opacity: 0; }
+  20%  { opacity: 0.6; }
+  40%  { opacity: 0; }
+  60%  { opacity: 0.4; }
+  80%  { opacity: 0; }
+}
+
+.rgb-split {
+  animation: rgbSplit 0.3s steps(1) infinite;
+}
+
+/* Static noise overlay */
+@keyframes staticNoise {
+  0%   { background-position: 0 0; }
+  25%  { background-position: -50% -50%; }
+  50%  { background-position: 50% 25%; }
+  75%  { background-position: -25% 50%; }
+  100% { background-position: 25% -25%; }
+}
+
+.static-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+  animation: staticNoise 0.1s steps(4) infinite;
+}
+
 /* ═══ Mobile Optimizations ═══ */
 @media (max-width: 640px) {
   .section-padding {

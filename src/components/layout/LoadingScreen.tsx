@@ -52,20 +52,23 @@ function SpeedLines() {
 
 export function LoadingScreen() {
   const [loading, setLoading] = useState(true);
-  // Phases: "init" → "bars" → "scramble" → "decrypt" → "done"
-  const [phase, setPhase] = useState<"init" | "bars" | "scramble" | "decrypt" | "done">("init");
+  // Phases: "init" → "bars" → "scramble" → "decrypt" → "done" → "glitch"
+  const [phase, setPhase] = useState<"init" | "bars" | "scramble" | "decrypt" | "done" | "glitch">("init");
   const [displayText, setDisplayText] = useState("█".repeat(NAME.length));
 
   // Phase sequencing
   useEffect(() => {
+    const decryptEnd = 2200 + NAME.length * 150 + 300;
+    const glitchStart = decryptEnd + 2500; // 2.5s to read subtitle
+    const exitTime = glitchStart + 700; // glitch lasts ~700ms then fade out
+
     const timers = [
       setTimeout(() => setPhase("bars"), 300),
       setTimeout(() => setPhase("scramble"), 800),
       setTimeout(() => setPhase("decrypt"), 2200),
-      // decrypt takes ~NAME.length * 150ms + buffer
-      setTimeout(() => setPhase("done"), 2200 + NAME.length * 150 + 300),
-      // Stay visible for 2.5s after subtitle appears
-      setTimeout(() => setLoading(false), 2200 + NAME.length * 150 + 3000),
+      setTimeout(() => setPhase("done"), decryptEnd),
+      setTimeout(() => setPhase("glitch"), glitchStart),
+      setTimeout(() => setLoading(false), exitTime),
     ];
     return () => timers.forEach(clearTimeout);
   }, []);
@@ -109,13 +112,14 @@ export function LoadingScreen() {
       return () => clearInterval(interval);
     }
 
-    // phase === "done" — keep final text
+    // phase === "done" or "glitch" — keep final text
     setDisplayText(NAME);
   }, [phase]);
 
   const showBars = phase !== "init";
   const showSpeedLines = phase === "scramble" || phase === "decrypt";
-  const showSubtitle = phase === "done";
+  const showSubtitle = phase === "done" || phase === "glitch";
+  const isGlitching = phase === "glitch";
 
   return (
     <AnimatePresence>
@@ -172,17 +176,37 @@ export function LoadingScreen() {
             transition={{ duration: 0.4 }}
           />
 
+          {/* CRT glitch overlays */}
+          {isGlitching && (
+            <>
+              {/* Static noise overlay */}
+              <div className="absolute inset-0 static-noise opacity-20 pointer-events-none z-30 mix-blend-overlay" />
+              {/* Horizontal tear lines */}
+              <div className="glitch-tear z-30" style={{ animationDelay: "0s" }} />
+              <div className="glitch-tear z-30" style={{ animationDelay: "0.05s" }} />
+              <div className="glitch-tear z-30" style={{ animationDelay: "0.1s" }} />
+              {/* RGB split overlay — red and blue shifted copies */}
+              <div
+                className="absolute inset-0 rgb-split pointer-events-none z-20 mix-blend-screen"
+                style={{
+                  background: "linear-gradient(90deg, rgba(255,0,0,0.08) 0%, transparent 30%, rgba(0,0,255,0.08) 70%, transparent 100%)",
+                  transform: "translateX(3px)",
+                }}
+              />
+            </>
+          )}
+
           {/* Main content */}
           <motion.div
-            className="relative z-10 flex items-center justify-center"
-            animate={showSubtitle ? { scale: [1, 1.03, 1] } : {}}
+            className={`relative z-10 flex items-center justify-center ${isGlitching ? "crt-glitch" : ""}`}
+            animate={showSubtitle && !isGlitching ? { scale: [1, 1.03, 1] } : {}}
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
             <div className="flex items-baseline">
               {/* Name characters — only visible once scramble starts */}
               <motion.span
                 initial={{ opacity: 0 }}
-                animate={phase === "scramble" || phase === "decrypt" || phase === "done" ? { opacity: 1 } : {}}
+                animate={phase === "scramble" || phase === "decrypt" || phase === "done" || phase === "glitch" ? { opacity: 1 } : {}}
                 transition={{ duration: 0.3 }}
                 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-bold font-mono inline-block tracking-tight"
                 style={{
