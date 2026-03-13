@@ -402,8 +402,8 @@ export function Contact() {
     if (phase !== "idle") return;
     setExpandedLine(null);
 
-    // If currently hacked and config is now secure, decrypt normally and revert
-    if (isHacked && isSecure) {
+    // If currently hacked and config is no longer critically insecure, decrypt and revert
+    if (isHacked && !isCriticallyInsecure) {
       setPhase("scanning");
       setTimeout(() => {
         setPhase("decrypting");
@@ -431,8 +431,8 @@ export function Contact() {
   useEffect(() => {
     if (emailRevealed && phase === "decrypting") {
       setPhase("revealed");
-      // If we were hacked and decryption succeeds (secure config), clear hacked state
-      if (isHacked && isSecure) {
+      // If we were hacked and decryption succeeds, clear hacked state
+      if (isHacked) {
         setHacked(false);
       }
     }
