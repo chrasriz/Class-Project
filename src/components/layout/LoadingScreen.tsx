@@ -60,7 +60,7 @@ export function LoadingScreen() {
   useEffect(() => {
     const decryptEnd = 2200 + NAME.length * 150 + 300;
     const glitchStart = decryptEnd + 1150; // 50ms after subtitle + tagline fully appear
-    const exitTime = glitchStart + 700; // glitch lasts ~700ms then fade out
+    const exitTime = glitchStart + 750; // 50ms after glitch ends (700ms)
 
     const timers = [
       setTimeout(() => setPhase("bars"), 300),
@@ -127,7 +127,7 @@ export function LoadingScreen() {
         <motion.div
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
+          transition={{ duration: 0.05 }}
           className="loading-screen"
           role="status"
           aria-label="Loading"
