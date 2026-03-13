@@ -7,34 +7,30 @@ import { SKILLS } from "@/lib/constants";
 import { fadeUp, staggerContainer } from "@/lib/animations";
 
 // Per-category hover color themes
-const CATEGORY_COLORS: Record<string, { text: string; border: string; bg: string; shadow: string; percent: string }> = {
+const CATEGORY_COLORS: Record<string, { text: string; border: string; bg: string; shadow: string }> = {
   "Security Operations": {
-    text: "group-hover/tag:text-cyan",
-    border: "group-hover/tag:border-cyan/30",
-    bg: "group-hover/tag:bg-cyan/[0.04]",
-    shadow: "group-hover/tag:shadow-[0_0_12px_rgba(6,182,212,0.08)]",
-    percent: "text-cyan",
+    text: "hover:text-cyan",
+    border: "hover:border-cyan/30",
+    bg: "hover:bg-cyan/[0.04]",
+    shadow: "hover:shadow-[0_0_12px_rgba(6,182,212,0.08)]",
   },
   "Network Security": {
-    text: "group-hover/tag:text-emerald-400",
-    border: "group-hover/tag:border-emerald-400/30",
-    bg: "group-hover/tag:bg-emerald-400/[0.04]",
-    shadow: "group-hover/tag:shadow-[0_0_12px_rgba(52,211,153,0.08)]",
-    percent: "text-emerald-400",
+    text: "hover:text-emerald-400",
+    border: "hover:border-emerald-400/30",
+    bg: "hover:bg-emerald-400/[0.04]",
+    shadow: "hover:shadow-[0_0_12px_rgba(52,211,153,0.08)]",
   },
   "Access & Compliance": {
-    text: "group-hover/tag:text-amber-400",
-    border: "group-hover/tag:border-amber-400/30",
-    bg: "group-hover/tag:bg-amber-400/[0.04]",
-    shadow: "group-hover/tag:shadow-[0_0_12px_rgba(251,191,36,0.08)]",
-    percent: "text-amber-400",
+    text: "hover:text-amber-400",
+    border: "hover:border-amber-400/30",
+    bg: "hover:bg-amber-400/[0.04]",
+    shadow: "hover:shadow-[0_0_12px_rgba(251,191,36,0.08)]",
   },
   "Infrastructure & Tools": {
-    text: "group-hover/tag:text-violet-400",
-    border: "group-hover/tag:border-violet-400/30",
-    bg: "group-hover/tag:bg-violet-400/[0.04]",
-    shadow: "group-hover/tag:shadow-[0_0_12px_rgba(167,139,250,0.08)]",
-    percent: "text-violet-400",
+    text: "hover:text-violet-400",
+    border: "hover:border-violet-400/30",
+    bg: "hover:bg-violet-400/[0.04]",
+    shadow: "hover:shadow-[0_0_12px_rgba(167,139,250,0.08)]",
   },
 };
 
@@ -95,11 +91,11 @@ export function Skills() {
                     return (
                       <span
                         key={skill.name}
-                        className={`group/tag relative px-3.5 py-2 text-sm text-muted bg-white/[0.03] border border-border rounded-lg ${colors.text} ${colors.border} ${colors.bg} ${colors.shadow} active:text-cyan active:border-cyan/30 transition-all duration-300 cursor-default`}
+                        className={`group/tag relative px-3.5 py-2 text-sm text-muted bg-white/[0.03] border border-border rounded-lg ${colors.text} ${colors.border} ${colors.bg} ${colors.shadow} transition-all duration-300 cursor-default`}
                       >
                         {skill.name}
                         {/* Percentage tooltip — absolute so it doesn't affect layout */}
-                        <span className={`absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-surface border border-border font-mono text-xs ${colors.percent} opacity-0 group-hover/tag:opacity-100 group-active/tag:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg`}>
+                        <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-surface border border-border font-mono text-xs text-muted opacity-0 group-hover/tag:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
                           {skill.level}%
                         </span>
                       </span>
