@@ -157,7 +157,7 @@ function isOptionSecure(label: string, value: string): boolean {
 }
 
 // Status line component — static (no dropdown)
-function StatusLine({ label, value, delay, active }: { label: string; value: string; delay: number; active: boolean }) {
+function StatusLine({ label, value, delay, active, isInsecure, phase }: { label: string; value: string; delay: number; active: boolean; isInsecure?: boolean; phase?: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -167,7 +167,15 @@ function StatusLine({ label, value, delay, active }: { label: string; value: str
     >
       <span className="text-subtle">{label}</span>
       <span className="flex-1 border-b border-dotted border-white/5" />
-      <span className="text-cyan">{value}</span>
+      <span className={
+        isInsecure
+          ? "text-red-400"
+          : phase === "scanning" || phase === "decrypting"
+          ? "text-amber-400 animate-pulse"
+          : "text-cyan"
+      }>
+        {value}
+      </span>
     </motion.div>
   );
 }
@@ -175,6 +183,7 @@ function StatusLine({ label, value, delay, active }: { label: string; value: str
 // Configurable status line with expandable dropdown
 function ConfigLine({
   label,
+  configKey,
   value,
   delay,
   active,
@@ -184,6 +193,7 @@ function ConfigLine({
   onSelect,
 }: {
   label: string;
+  configKey: string;
   value: string;
   delay: number;
   active: boolean;
@@ -192,7 +202,7 @@ function ConfigLine({
   onToggle: () => void;
   onSelect: (val: string) => void;
 }) {
-  const options = CONFIG_OPTIONS[label] || [];
+  const options = CONFIG_OPTIONS[configKey] || [];
 
   return (
     <motion.div
@@ -534,7 +544,8 @@ export function Contact() {
                 {/* Status lines */}
                 <div className="space-y-3 mb-10">
                   <ConfigLine
-                    label="protocol"
+                    label="Protocol"
+                    configKey="protocol"
                     value={config.protocol}
                     delay={0.5}
                     active={isInView}
@@ -544,7 +555,8 @@ export function Contact() {
                     onSelect={(v) => handleSelectOption("protocol", v)}
                   />
                   <ConfigLine
-                    label="cipher"
+                    label="Cipher"
+                    configKey="cipher"
                     value={config.cipher}
                     delay={0.8}
                     active={isInView}
@@ -554,7 +566,8 @@ export function Contact() {
                     onSelect={(v) => handleSelectOption("cipher", v)}
                   />
                   <ConfigLine
-                    label="key_exchange"
+                    label="Key Exchange"
+                    configKey="key_exchange"
                     value={config.key_exchange}
                     delay={1.1}
                     active={isInView}
@@ -563,7 +576,22 @@ export function Contact() {
                     onToggle={() => handleToggleLine("key_exchange")}
                     onSelect={(v) => handleSelectOption("key_exchange", v)}
                   />
-                  <StatusLine label="identity" value="verified" delay={1.4} active={isInView} />
+                  <StatusLine
+                    label="Identity"
+                    value={
+                      !isSecure
+                        ? "not verified"
+                        : phase === "scanning" || phase === "decrypting"
+                        ? "verifying..."
+                        : phase === "revealed"
+                        ? "verified"
+                        : "pending"
+                    }
+                    delay={1.4}
+                    active={isInView}
+                    isInsecure={!isSecure}
+                    phase={phase}
+                  />
                 </div>
 
                 {/* Confirm change modal */}
