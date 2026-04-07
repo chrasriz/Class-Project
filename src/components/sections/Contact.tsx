@@ -475,7 +475,7 @@ export function Contact() {
             whileInView="visible"
             viewport={{ once: true }}
           >
-            <GlassPanel variant="card" className="relative overflow-hidden">
+            <GlassPanel variant="card" className="relative overflow-hidden max-w-full">
               {/* Matrix rain background */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
                 {isInView && matrixColumns.map((col) => (
@@ -489,20 +489,20 @@ export function Contact() {
               )}
 
               {/* Terminal content */}
-              <div className="relative z-10 p-8 md:p-12">
+              <div className="relative z-10 p-5 sm:p-8 md:p-12">
                 {/* Terminal header bar */}
-                <div className={`flex items-center gap-2 mb-8 pb-4 border-b ${isSecure ? "border-white/5" : "border-red-400/20"}`}>
-                  <div className="flex gap-1.5">
+                <div className={`flex items-center gap-2 mb-8 pb-4 border-b overflow-hidden ${isSecure ? "border-white/5" : "border-red-400/20"}`}>
+                  <div className="flex gap-1.5 shrink-0">
                     <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
                     <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
                     <div className={`w-2.5 h-2.5 rounded-full ${isSecure ? "bg-green-500/60" : "bg-red-500/60"}`} />
                   </div>
-                  <span className={`ml-3 font-mono text-[10px] tracking-wider transition-colors duration-300 ${isSecure ? "text-subtle" : "text-red-400/80"}`}>
+                  <span className={`ml-3 font-mono text-[10px] tracking-wider transition-colors duration-300 truncate hidden sm:inline ${isSecure ? "text-subtle" : "text-red-400/80"}`}>
                     {isSecure
                       ? `SECURE_CHANNEL — ${config.key_exchange} — ${config.cipher}`
                       : `UNSECURE_CHANNEL — ${config.key_exchange} — ${config.cipher}`}
                   </span>
-                  <div className="ml-auto flex items-center gap-2">
+                  <div className="ml-auto flex items-center gap-2 shrink-0">
                     <div className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
                       !isSecure ? "bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]" :
                       phase === "revealed" ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" :
@@ -665,7 +665,7 @@ export function Contact() {
                           ? "/// critical vulnerability detected ///"
                           : "/// encrypted transmission ready ///"}
                       </p>
-                      <span className="block font-mono text-base sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-foreground/20 mb-8 select-none break-all">
+                      <span className="block font-mono text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-foreground/20 mb-8 select-none break-all">
                         {"█".repeat(email.length)}
                       </span>
 
@@ -693,7 +693,7 @@ export function Contact() {
                       <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-red-400 mb-6">
                         /// SYSTEM BREACH DETECTED ///
                       </p>
-                      <span className="block font-mono text-base sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-red-500/40 mb-8 select-none break-all hacked-text-pulse">
+                      <span className="block font-mono text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-red-500/40 mb-8 select-none break-all hacked-text-pulse">
                         {"█".repeat(email.length)}
                       </span>
                       <div className="max-w-sm mx-auto border border-red-500/30 bg-red-500/[0.06] rounded-lg p-5 text-center">
@@ -740,7 +740,7 @@ export function Contact() {
 
                         {phase === "scanning" ? (
                           /* During scanning, show blocks */
-                          <span className="font-mono text-base sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-foreground/20 select-none break-all">
+                          <span className="font-mono text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-foreground/20 select-none break-all">
                             {"█".repeat(email.length)}
                           </span>
                         ) : phase === "revealed" ? (
@@ -750,7 +750,7 @@ export function Contact() {
                             className="relative group"
                             aria-label={`Send email to ${email}`}
                           >
-                            <span className="font-mono text-base sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-cyan hover:text-cyan/80 transition-colors duration-300 break-all">
+                            <span className="font-mono text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-cyan hover:text-cyan/80 transition-colors duration-300 break-all">
                               {email}
                             </span>
                             <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 font-mono text-[10px] tracking-wider text-subtle group-hover:text-cyan transition-colors duration-300 whitespace-nowrap">
@@ -759,7 +759,7 @@ export function Contact() {
                           </a>
                         ) : (
                           /* During decrypting, show the scramble animation */
-                          <span className="font-mono text-base sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-foreground/80 break-all">
+                          <span className="font-mono text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-foreground/80 break-all">
                             {scrambledEmail}
                           </span>
                         )}

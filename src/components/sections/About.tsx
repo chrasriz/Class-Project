@@ -11,7 +11,7 @@ import { HackedOverlay } from "@/components/ui/HackedOverlay";
 const STATS = [
   { value: "200+", label: "IT Issues Resolved", clickable: false },
   { value: "3", label: "Certifications", clickable: true, modalKey: "certs" as const },
-  { value: "3+", label: "Years Experience", clickable: true, modalKey: "experience" as const },
+  { value: "2+", label: "Years Experience", clickable: true, modalKey: "experience" as const },
   { value: "~20%", label: "Uptime Improvement", clickable: false },
 ];
 
