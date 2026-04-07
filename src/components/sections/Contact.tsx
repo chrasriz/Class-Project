@@ -217,15 +217,17 @@ function ConfigLine({
         <button
           onClick={onToggle}
           className={`flex items-center gap-1.5 transition-colors cursor-pointer ${
-            isInsecure ? "text-red-400 hover:text-red-300" : "text-cyan hover:text-cyan/80"
+            !value
+              ? "text-subtle hover:text-foreground"
+              : isInsecure ? "text-red-400 hover:text-red-300" : "text-cyan hover:text-cyan/80"
           }`}
         >
-          {isInsecure && (
+          {isInsecure && value && (
             <svg className="w-3 h-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
             </svg>
           )}
-          <span>{value}</span>
+          <span>{value || "—"}</span>
           <svg
             className={`w-3 h-3 text-subtle transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
             fill="none"
@@ -340,26 +342,30 @@ export function Contact() {
     120
   );
 
-  // Configurable status line state
+  // Configurable status line state — empty by default (user must choose)
   const [config, setConfig] = useState({
-    protocol: "TLS 1.3",
-    cipher: "AES-256-GCM",
-    key_exchange: "X25519",
+    protocol: "",
+    cipher: "",
+    key_exchange: "",
   });
+  const [showConfigWarning, setShowConfigWarning] = useState(false);
   const [expandedLine, setExpandedLine] = useState<string | null>(null);
   const [pendingChange, setPendingChange] = useState<{ key: string; value: string } | null>(null);
 
-  // Compute overall security state
-  const isSecure =
+  // Check if all config options have been selected
+  const allConfigured = config.protocol !== "" && config.cipher !== "" && config.key_exchange !== "";
+
+  // Compute overall security state (only meaningful when all configured)
+  const isSecure = allConfigured &&
     isOptionSecure("protocol", config.protocol) &&
     isOptionSecure("cipher", config.cipher) &&
     isOptionSecure("key_exchange", config.key_exchange);
 
-  // Count how many config options are insecure
+  // Count how many config options are insecure (ignore empty)
   const insecureCount = [
-    !isOptionSecure("protocol", config.protocol),
-    !isOptionSecure("cipher", config.cipher),
-    !isOptionSecure("key_exchange", config.key_exchange),
+    config.protocol && !isOptionSecure("protocol", config.protocol),
+    config.cipher && !isOptionSecure("cipher", config.cipher),
+    config.key_exchange && !isOptionSecure("key_exchange", config.key_exchange),
   ].filter(Boolean).length;
   const isCriticallyInsecure = insecureCount >= 2;
 
@@ -412,6 +418,13 @@ export function Contact() {
     if (phase !== "idle") return;
     setExpandedLine(null);
 
+    // If not all options are configured, show warning
+    if (!allConfigured) {
+      setShowConfigWarning(true);
+      setTimeout(() => setShowConfigWarning(false), 3000);
+      return;
+    }
+
     // If currently hacked and config is no longer critically insecure, decrypt and revert
     if (isHacked && !isCriticallyInsecure) {
       setPhase("scanning");
@@ -436,7 +449,7 @@ export function Contact() {
     // Normal decrypt flow
     setPhase("scanning");
     setTimeout(() => setPhase("decrypting"), 1500);
-  }, [phase, isCriticallyInsecure, isHacked, isSecure, setHacked, resetScramble]);
+  }, [phase, allConfigured, isCriticallyInsecure, isHacked, isSecure, setHacked, resetScramble]);
 
   useEffect(() => {
     if (emailRevealed && phase === "decrypting") {
@@ -550,7 +563,7 @@ export function Contact() {
                     delay={0.5}
                     active={isInView}
                     expanded={expandedLine === "protocol"}
-                    isInsecure={!isOptionSecure("protocol", config.protocol)}
+                    isInsecure={config.protocol !== "" && !isOptionSecure("protocol", config.protocol)}
                     onToggle={() => handleToggleLine("protocol")}
                     onSelect={(v) => handleSelectOption("protocol", v)}
                   />
@@ -561,7 +574,7 @@ export function Contact() {
                     delay={0.8}
                     active={isInView}
                     expanded={expandedLine === "cipher"}
-                    isInsecure={!isOptionSecure("cipher", config.cipher)}
+                    isInsecure={config.cipher !== "" && !isOptionSecure("cipher", config.cipher)}
                     onToggle={() => handleToggleLine("cipher")}
                     onSelect={(v) => handleSelectOption("cipher", v)}
                   />
@@ -572,14 +585,16 @@ export function Contact() {
                     delay={1.1}
                     active={isInView}
                     expanded={expandedLine === "key_exchange"}
-                    isInsecure={!isOptionSecure("key_exchange", config.key_exchange)}
+                    isInsecure={config.key_exchange !== "" && !isOptionSecure("key_exchange", config.key_exchange)}
                     onToggle={() => handleToggleLine("key_exchange")}
                     onSelect={(v) => handleSelectOption("key_exchange", v)}
                   />
                   <StatusLine
                     label="Identity"
                     value={
-                      !isSecure
+                      !allConfigured
+                        ? "awaiting configuration"
+                        : !isSecure
                         ? "not verified"
                         : phase === "scanning" || phase === "decrypting"
                         ? "verifying..."
@@ -589,7 +604,7 @@ export function Contact() {
                     }
                     delay={1.4}
                     active={isInView}
-                    isInsecure={!isSecure}
+                    isInsecure={allConfigured && !isSecure}
                     phase={phase}
                   />
                 </div>
@@ -682,6 +697,18 @@ export function Contact() {
                         </svg>
                         {isHacked ? "RESTORE SYSTEM" : "DECRYPT SIGNAL"}
                       </button>
+
+                      {/* Config warning */}
+                      {showConfigWarning && (
+                        <motion.p
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0 }}
+                          className="mt-4 font-mono text-[11px] text-amber-400 tracking-wider"
+                        >
+                          Configure all parameters above before decrypting
+                        </motion.p>
+                      )}
                     </div>
                   ) : phase === "hacked" ? (
                     /* Hacked / policy violation state */
