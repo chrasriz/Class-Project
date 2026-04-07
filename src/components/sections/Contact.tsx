@@ -350,6 +350,8 @@ export function Contact() {
   });
   const [showConfigWarning, setShowConfigWarning] = useState(false);
   const [expandedLine, setExpandedLine] = useState<string | null>(null);
+  const warningTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const phaseTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [pendingChange, setPendingChange] = useState<{ key: string; value: string } | null>(null);
 
   // Check if all config options have been selected
@@ -421,24 +423,24 @@ export function Contact() {
     // If not all options are configured, show warning
     if (!allConfigured) {
       setShowConfigWarning(true);
-      setTimeout(() => setShowConfigWarning(false), 3000);
+      clearTimeout(warningTimerRef.current);
+      warningTimerRef.current = setTimeout(() => setShowConfigWarning(false), 3000);
       return;
     }
 
     // If currently hacked and config is no longer critically insecure, decrypt and revert
     if (isHacked && !isCriticallyInsecure) {
       setPhase("scanning");
-      setTimeout(() => {
-        setPhase("decrypting");
-      }, 1500);
-      // The emailRevealed effect below will handle clearing hacked state
+      clearTimeout(phaseTimerRef.current);
+      phaseTimerRef.current = setTimeout(() => setPhase("decrypting"), 1500);
       return;
     }
 
     // If critically insecure, start decrypt then trigger hacked mode after 50ms
     if (isCriticallyInsecure) {
       setPhase("decrypting");
-      setTimeout(() => {
+      clearTimeout(phaseTimerRef.current);
+      phaseTimerRef.current = setTimeout(() => {
         setPhase("hacked");
         setHacked(true);
         resetScramble();
@@ -448,18 +450,26 @@ export function Contact() {
 
     // Normal decrypt flow
     setPhase("scanning");
-    setTimeout(() => setPhase("decrypting"), 1500);
+    clearTimeout(phaseTimerRef.current);
+    phaseTimerRef.current = setTimeout(() => setPhase("decrypting"), 1500);
   }, [phase, allConfigured, isCriticallyInsecure, isHacked, isSecure, setHacked, resetScramble]);
 
   useEffect(() => {
     if (emailRevealed && phase === "decrypting") {
       setPhase("revealed");
-      // If we were hacked and decryption succeeds, clear hacked state
       if (isHacked) {
         setHacked(false);
       }
     }
   }, [emailRevealed, phase, isHacked, isSecure, setHacked]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      clearTimeout(warningTimerRef.current);
+      clearTimeout(phaseTimerRef.current);
+    };
+  }, []);
 
   // Matrix rain columns (deterministic positions)
   const matrixColumns = useRef(
@@ -504,26 +514,28 @@ export function Contact() {
               {/* Terminal content */}
               <div className="relative z-10 p-5 sm:p-8 md:p-12">
                 {/* Terminal header bar */}
-                <div className={`flex items-center gap-2 mb-8 pb-4 border-b overflow-hidden ${isSecure ? "border-white/5" : "border-red-400/20"}`}>
+                <div className={`flex items-center gap-2 mb-8 pb-4 border-b overflow-hidden ${allConfigured && !isSecure ? "border-red-400/20" : "border-white/5"}`}>
                   <div className="flex gap-1.5 shrink-0">
                     <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
                     <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
-                    <div className={`w-2.5 h-2.5 rounded-full ${isSecure ? "bg-green-500/60" : "bg-red-500/60"}`} />
+                    <div className={`w-2.5 h-2.5 rounded-full ${allConfigured && !isSecure ? "bg-red-500/60" : "bg-green-500/60"}`} />
                   </div>
-                  <span className={`ml-3 font-mono text-[10px] tracking-wider transition-colors duration-300 truncate hidden sm:inline ${isSecure ? "text-subtle" : "text-red-400/80"}`}>
-                    {isSecure
+                  <span className={`ml-3 font-mono text-[10px] tracking-wider transition-colors duration-300 truncate hidden sm:inline ${allConfigured && !isSecure ? "text-red-400/80" : "text-subtle"}`}>
+                    {!allConfigured
+                      ? "UNCONFIGURED — select parameters above"
+                      : isSecure
                       ? `SECURE_CHANNEL — ${config.key_exchange} — ${config.cipher}`
                       : `UNSECURE_CHANNEL — ${config.key_exchange} — ${config.cipher}`}
                   </span>
                   <div className="ml-auto flex items-center gap-2 shrink-0">
                     <div className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
-                      !isSecure ? "bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]" :
+                      allConfigured && !isSecure ? "bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]" :
                       phase === "revealed" ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" :
                       phase === "idle" ? "bg-subtle" : "bg-cyan animate-pulse"
                     }`} />
-                    <span className={`font-mono text-[10px] transition-colors duration-300 ${!isSecure ? "text-red-400/80" : "text-subtle"}`}>
-                      {!isSecure && "INSECURE"}
-                      {isSecure && phase === "idle" && "STANDBY"}
+                    <span className={`font-mono text-[10px] transition-colors duration-300 ${allConfigured && !isSecure ? "text-red-400/80" : "text-subtle"}`}>
+                      {allConfigured && !isSecure && "INSECURE"}
+                      {(!allConfigured || isSecure) && phase === "idle" && "STANDBY"}
                       {isSecure && phase === "scanning" && "SCANNING"}
                       {isSecure && phase === "decrypting" && "DECRYPTING"}
                       {isSecure && phase === "revealed" && "CONNECTED"}
@@ -532,7 +544,7 @@ export function Contact() {
                 </div>
 
                 {/* Insecure channel warning banner */}
-                {!isSecure && (
+                {allConfigured && !isSecure && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
