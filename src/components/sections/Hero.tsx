@@ -20,6 +20,7 @@ function StatusBadge() {
   const [password, setPassword] = useState("");
   const [editText, setEditText] = useState("");
   const [authError, setAuthError] = useState(false);
+  const [authenticating, setAuthenticating] = useState(false);
   const [saving, setSaving] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const editRef = useRef<HTMLInputElement>(null);
@@ -46,7 +47,8 @@ function StatusBadge() {
   }, [isAdmin, statusText]);
 
   const handleAuth = useCallback(async () => {
-    if (!password.trim()) return;
+    if (!password.trim() || authenticating) return;
+    setAuthenticating(true);
     try {
       const res = await fetch("/api/status", {
         method: "PUT",
@@ -63,8 +65,10 @@ function StatusBadge() {
       }
     } catch {
       setAuthError(true);
+    } finally {
+      setAuthenticating(false);
     }
-  }, [password, statusText]);
+  }, [password, statusText, authenticating]);
 
   const handleSave = useCallback(async () => {
     if (!editText.trim() || saving) return;
@@ -161,9 +165,10 @@ function StatusBadge() {
               <div className="flex gap-2 mt-4">
                 <button
                   onClick={handleAuth}
-                  className="flex-1 px-4 py-2 font-mono text-[11px] tracking-wider text-cyan border border-cyan/30 rounded-lg hover:bg-cyan/10 transition-colors cursor-pointer"
+                  disabled={authenticating}
+                  className="flex-1 px-4 py-2 font-mono text-[11px] tracking-wider text-cyan border border-cyan/30 rounded-lg hover:bg-cyan/10 transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  AUTHENTICATE
+                  {authenticating ? "VERIFYING..." : "AUTHENTICATE"}
                 </button>
                 <button
                   onClick={() => setShowAuth(false)}
