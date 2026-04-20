@@ -103,7 +103,11 @@ function useScrambleText(target: string, active: boolean, speed = 40, scrambleCy
     }, speed);
 
     return () => clearInterval(frameRef.current);
-  }, [active, target, speed, scrambleCycles, blocks, done]);
+    // `done` and `blocks` intentionally excluded: `done` is set inside the
+    // interval and must not re-trigger the effect, or the reveal flashes and
+    // resets to blocks. `blocks` is derived from `target`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, target, speed, scrambleCycles]);
 
   // Reset function — call when config changes to go back to blocks
   const reset = useCallback(() => {
