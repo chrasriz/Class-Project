@@ -80,6 +80,23 @@ export const metadata: Metadata = {
   },
 };
 
+const personJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Chaudhry Rasikh Rizwan",
+  alternateName: "Rasikh Rizwan",
+  url: "https://chrasriz.com",
+  email: "mailto:connect@chrasriz.com",
+  jobTitle: "Cybersecurity Analyst",
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Toronto",
+    addressRegion: "ON",
+    addressCountry: "CA",
+  },
+  sameAs: ["https://www.linkedin.com/in/ch-rasikh-rizwan/"],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -96,6 +113,10 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+        />
         {children}
       </body>
     </html>

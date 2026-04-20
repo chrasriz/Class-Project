@@ -7,8 +7,6 @@ export const SITE_CONFIG = {
   location: "Toronto, Canada",
   role: "Cybersecurity Analyst | IT Professional",
   email: "connect@chrasriz.com",
-  phone: "+1(647)594-0449",
-  personalEmail: "Rizwan.rasikh@gmail.com",
   socials: {
     linkedin: "https://www.linkedin.com/in/ch-rasikh-rizwan/",
   },

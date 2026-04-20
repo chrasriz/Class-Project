@@ -7,6 +7,7 @@ import { GlassPanel } from "@/components/ui/GlassPanel";
 import { CERTIFICATIONS, EXPERIENCE } from "@/lib/constants";
 import { fadeUp, staggerContainer } from "@/lib/animations";
 import { HackedOverlay } from "@/components/ui/HackedOverlay";
+import { useEscape } from "@/hooks/useEscape";
 
 const STATS = [
   { value: "200+", label: "IT Issues Resolved", clickable: false },
@@ -25,6 +26,8 @@ const TRAITS = [
 type ModalType = "certs" | "experience" | null;
 
 function DetailModal({ type, onClose }: { type: ModalType; onClose: () => void }) {
+  useEscape(type !== null, onClose);
+
   if (!type) return null;
 
   const workExperience = EXPERIENCE.filter((e) => e.type === "work");
@@ -43,6 +46,9 @@ function DetailModal({ type, onClose }: { type: ModalType; onClose: () => void }
 
         {/* Modal */}
         <motion.div
+          role="dialog"
+          aria-modal="true"
+          aria-label={type === "certs" ? "Certifications" : "Work experience"}
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}

@@ -49,26 +49,6 @@ export const staggerContainer: Variants = {
   },
 };
 
-// Slide from left
-export const slideLeft: Variants = {
-  hidden: { opacity: 0, x: -60 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: { duration: 0.7, ease: EASE.smooth },
-  },
-};
-
-// Slide from right
-export const slideRight: Variants = {
-  hidden: { opacity: 0, x: 60 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: { duration: 0.7, ease: EASE.smooth },
-  },
-};
-
 // Glass panel reveal
 export const glassReveal: Variants = {
   hidden: { opacity: 0, y: 30, backdropFilter: "blur(0px)" },

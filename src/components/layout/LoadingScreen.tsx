@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 const NAME = "Rasikh";
 const CIPHER_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*!?<>{}[]=/\\|~^";
@@ -51,13 +52,18 @@ function SpeedLines() {
 }
 
 export function LoadingScreen() {
-  const [loading, setLoading] = useState(true);
+  const reducedMotion = useReducedMotion();
+  const [loading, setLoading] = useState(!reducedMotion);
   // Phases: "init" → "bars" → "scramble" → "decrypt" → "done" → "glitch"
   const [phase, setPhase] = useState<"init" | "bars" | "scramble" | "decrypt" | "done" | "glitch">("init");
   const [displayText, setDisplayText] = useState("█".repeat(NAME.length));
 
   // Phase sequencing
   useEffect(() => {
+    if (reducedMotion) {
+      setLoading(false);
+      return;
+    }
     const decryptEnd = 2200 + NAME.length * 150 + 300;
     const glitchStart = decryptEnd + 1150; // 50ms after subtitle + tagline fully appear
     const exitTime = glitchStart + 750; // 50ms after glitch ends (700ms)
@@ -71,7 +77,7 @@ export function LoadingScreen() {
       setTimeout(() => setLoading(false), exitTime),
     ];
     return () => timers.forEach(clearTimeout);
-  }, []);
+  }, [reducedMotion]);
 
   // Scramble / decrypt text effect
   useEffect(() => {

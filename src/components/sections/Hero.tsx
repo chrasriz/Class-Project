@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { SITE_CONFIG } from "@/lib/constants";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 import { HackedOverlay } from "@/components/ui/HackedOverlay";
+import { useEscape } from "@/hooks/useEscape";
 
 const TITLES = [
   "Cybersecurity Analyst",
@@ -25,11 +26,18 @@ function StatusBadge() {
   const inputRef = useRef<HTMLInputElement>(null);
   const editRef = useRef<HTMLInputElement>(null);
 
-  // Fetch current status on mount
+  useEscape(showAuth, () => setShowAuth(false));
+  useEscape(showEdit, () => setShowEdit(false));
+
+  // Fetch current status + existing session state on mount
   useEffect(() => {
     fetch("/api/status")
       .then((r) => r.json())
       .then((d) => { if (d.text) setStatusText(d.text); })
+      .catch(() => {});
+    fetch("/api/auth")
+      .then((r) => r.json())
+      .then((d) => { if (d.authenticated) setIsAdmin(true); })
       .catch(() => {});
   }, []);
 
@@ -50,10 +58,10 @@ function StatusBadge() {
     if (!password.trim() || authenticating) return;
     setAuthenticating(true);
     try {
-      const res = await fetch("/api/status", {
-        method: "PUT",
+      const res = await fetch("/api/auth", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: statusText, password: password.trim() }),
+        body: JSON.stringify({ password: password.trim() }),
       });
       if (res.ok) {
         setIsAdmin(true);
@@ -68,36 +76,33 @@ function StatusBadge() {
     } finally {
       setAuthenticating(false);
     }
-  }, [password, statusText, authenticating]);
+  }, [password, authenticating]);
 
   const handleSave = useCallback(async () => {
     if (!editText.trim() || saving) return;
     setSaving(true);
     try {
-      const stored = sessionStorage.getItem("admin_pw") || password;
       const res = await fetch("/api/status", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: editText.trim(), password: stored }),
+        body: JSON.stringify({ text: editText.trim() }),
       });
       if (res.ok) {
         const data = await res.json();
         setStatusText(data.text);
         setShowEdit(false);
+      } else if (res.status === 401) {
+        // Session expired — force re-auth
+        setIsAdmin(false);
+        setShowEdit(false);
+        setShowAuth(true);
       }
     } catch {
-      // silent fail
+      // Network error — leave modal open so the user can retry
     } finally {
       setSaving(false);
     }
-  }, [editText, saving, password]);
-
-  // Store password in session for subsequent edits
-  useEffect(() => {
-    if (isAdmin && password) {
-      sessionStorage.setItem("admin_pw", password);
-    }
-  }, [isAdmin, password]);
+  }, [editText, saving]);
 
   return (
     <>
@@ -137,6 +142,9 @@ function StatusBadge() {
           >
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Admin authentication"
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -194,6 +202,9 @@ function StatusBadge() {
           >
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Edit status"
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
