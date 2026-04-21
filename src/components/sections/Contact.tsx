@@ -7,6 +7,7 @@ import { GlassPanel } from "@/components/ui/GlassPanel";
 import { SITE_CONFIG } from "@/lib/constants";
 import { fadeUp } from "@/lib/animations";
 import { useHacked } from "@/lib/hacked-context";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 // Characters used for the scramble effect
 const CIPHER_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*!?<>{}[]=/\\|~^";
@@ -43,7 +44,6 @@ function useScrambleText(target: string, active: boolean, speed = 40, scrambleCy
   const [done, setDone] = useState(false);
   const frameRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const tickRef = useRef(0);
-  const prevActiveRef = useRef(false);
 
   useEffect(() => {
     // When active transitions from true → false and we're done, keep the final value
@@ -53,14 +53,12 @@ function useScrambleText(target: string, active: boolean, speed = 40, scrambleCy
       if (!done) {
         setDisplay(blocks);
       }
-      prevActiveRef.current = false;
       return;
     }
 
     // Starting fresh — reset state
     tickRef.current = 0;
     setDone(false);
-    prevActiveRef.current = true;
 
     frameRef.current = setInterval(() => {
       tickRef.current += 1;
@@ -103,7 +101,11 @@ function useScrambleText(target: string, active: boolean, speed = 40, scrambleCy
     }, speed);
 
     return () => clearInterval(frameRef.current);
-  }, [active, target, speed, scrambleCycles, blocks, done]);
+    // `done` and `blocks` intentionally excluded: `done` is set inside the
+    // interval and must not re-trigger the effect, or the reveal flashes and
+    // resets to blocks. `blocks` is derived from `target`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, target, speed, scrambleCycles]);
 
   // Reset function — call when config changes to go back to blocks
   const reset = useCallback(() => {
@@ -111,7 +113,6 @@ function useScrambleText(target: string, active: boolean, speed = 40, scrambleCy
     setDisplay(blocks);
     setDone(false);
     tickRef.current = 0;
-    prevActiveRef.current = false;
   }, [blocks]);
 
   return { display, done, reset };
@@ -333,6 +334,7 @@ function ChannelCard({
 export function Contact() {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  const reducedMotion = useReducedMotion();
   const [phase, setPhase] = useState<"idle" | "scanning" | "decrypting" | "revealed" | "hacked">("idle");
   const email = SITE_CONFIG.email;
   const { isHacked, setHacked } = useHacked();
@@ -388,28 +390,17 @@ export function Contact() {
 
   const handleConfirmChange = useCallback(() => {
     if (!pendingChange) return;
-    const newConfig = { ...config, [pendingChange.key]: pendingChange.value };
-    setConfig(newConfig);
+    setConfig({ ...config, [pendingChange.key]: pendingChange.value });
     setPendingChange(null);
     setExpandedLine(null);
-    // Reset decrypt so user has to re-decrypt with new config
+    // Reset decrypt so user has to re-decrypt with new config.
+    // Hacked state is intentionally preserved — it clears only on a successful
+    // decrypt through a secure config (see the reveal effect below).
     if (phase !== "idle") {
       setPhase("idle");
       resetScramble();
     }
-    // If hacked and config is now becoming more secure, clear hacked state on next decrypt
-    // (hacked state will be cleared when user successfully decrypts with secure config)
-    if (isHacked) {
-      // Check if new config is secure
-      const newSecure =
-        isOptionSecure("protocol", newConfig.protocol) &&
-        isOptionSecure("cipher", newConfig.cipher) &&
-        isOptionSecure("key_exchange", newConfig.key_exchange);
-      if (newSecure) {
-        // Don't clear hacked yet — user needs to decrypt again
-      }
-    }
-  }, [pendingChange, phase, resetScramble, config, isHacked]);
+  }, [pendingChange, phase, resetScramble, config]);
 
   const handleCancelChange = useCallback(() => {
     setPendingChange(null);
@@ -452,7 +443,7 @@ export function Contact() {
     setPhase("scanning");
     clearTimeout(phaseTimerRef.current);
     phaseTimerRef.current = setTimeout(() => setPhase("decrypting"), 1500);
-  }, [phase, allConfigured, isCriticallyInsecure, isHacked, isSecure, setHacked, resetScramble]);
+  }, [phase, allConfigured, isCriticallyInsecure, isHacked, setHacked, resetScramble]);
 
   useEffect(() => {
     if (emailRevealed && phase === "decrypting") {
@@ -461,7 +452,7 @@ export function Contact() {
         setHacked(false);
       }
     }
-  }, [emailRevealed, phase, isHacked, isSecure, setHacked]);
+  }, [emailRevealed, phase, isHacked, setHacked]);
 
   // Cleanup timers on unmount
   useEffect(() => {
@@ -499,12 +490,14 @@ export function Contact() {
             viewport={{ once: true }}
           >
             <GlassPanel variant="card" className="relative overflow-hidden max-w-full">
-              {/* Matrix rain background */}
-              <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
-                {isInView && matrixColumns.map((col) => (
-                  <MatrixColumn key={col.id} left={col.left} delay={col.delay} duration={col.duration} />
-                ))}
-              </div>
+              {/* Matrix rain background — skipped for prefers-reduced-motion */}
+              {!reducedMotion && (
+                <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
+                  {isInView && matrixColumns.map((col) => (
+                    <MatrixColumn key={col.id} left={col.left} delay={col.delay} duration={col.duration} />
+                  ))}
+                </div>
+              )}
 
               {/* Scan line */}
               {(phase === "scanning" || phase === "decrypting") && (
