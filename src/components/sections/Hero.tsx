@@ -6,6 +6,7 @@ import { SITE_CONFIG } from "@/lib/constants";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 import { HackedOverlay } from "@/components/ui/HackedOverlay";
 import { useEscape } from "@/hooks/useEscape";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 const TITLES = [
   "Cybersecurity Analyst",
@@ -25,9 +26,13 @@ function StatusBadge() {
   const [saving, setSaving] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const editRef = useRef<HTMLInputElement>(null);
+  const authPanelRef = useRef<HTMLDivElement>(null);
+  const editPanelRef = useRef<HTMLDivElement>(null);
 
   useEscape(showAuth, () => setShowAuth(false));
   useEscape(showEdit, () => setShowEdit(false));
+  useFocusTrap(authPanelRef, showAuth);
+  useFocusTrap(editPanelRef, showEdit);
 
   // Fetch current status + existing session state on mount
   useEffect(() => {
@@ -142,6 +147,7 @@ function StatusBadge() {
           >
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             <motion.div
+              ref={authPanelRef}
               role="dialog"
               aria-modal="true"
               aria-label="Admin authentication"
@@ -202,6 +208,7 @@ function StatusBadge() {
           >
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             <motion.div
+              ref={editPanelRef}
               role="dialog"
               aria-modal="true"
               aria-label="Edit status"

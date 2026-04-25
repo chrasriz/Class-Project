@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { GlassPanel } from "@/components/ui/GlassPanel";
@@ -8,6 +8,7 @@ import { CERTIFICATIONS, EXPERIENCE } from "@/lib/constants";
 import { fadeUp, staggerContainer } from "@/lib/animations";
 import { HackedOverlay } from "@/components/ui/HackedOverlay";
 import { useEscape } from "@/hooks/useEscape";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 const STATS = [
   { value: "200+", label: "IT Issues Resolved", clickable: false },
@@ -26,7 +27,9 @@ const TRAITS = [
 type ModalType = "certs" | "experience" | null;
 
 function DetailModal({ type, onClose }: { type: ModalType; onClose: () => void }) {
+  const panelRef = useRef<HTMLDivElement>(null);
   useEscape(type !== null, onClose);
+  useFocusTrap(panelRef, type !== null);
 
   if (!type) return null;
 
@@ -46,6 +49,7 @@ function DetailModal({ type, onClose }: { type: ModalType; onClose: () => void }
 
         {/* Modal */}
         <motion.div
+          ref={panelRef}
           role="dialog"
           aria-modal="true"
           aria-label={type === "certs" ? "Certifications" : "Work experience"}

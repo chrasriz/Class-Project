@@ -12,9 +12,8 @@ const securityHeaders = [
     key: "Strict-Transport-Security",
     value: "max-age=63072000; includeSubDomains; preload",
   },
-  // CSP intentionally omitted: framer-motion relies on inline styles, which
-  // needs a nonce-based CSP to be effective. Add one after confirming every
-  // inline style path with a proper audit.
+  // CSP is set per-request in src/proxy.ts so each response gets a fresh
+  // nonce for inline scripts.
 ];
 
 const nextConfig: NextConfig = {
