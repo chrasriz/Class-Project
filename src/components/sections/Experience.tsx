@@ -1,10 +1,12 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useScroll, useSpring } from "framer-motion";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { EXPERIENCE, CERTIFICATIONS } from "@/lib/constants";
 import { fadeUp, staggerContainer } from "@/lib/animations";
 import { HackedOverlay } from "@/components/ui/HackedOverlay";
+import { TiltCard } from "@/components/ui/TiltCard";
 
 const slideFromLeft = {
   hidden: { opacity: 0, x: -120 },
@@ -22,6 +24,13 @@ const TYPE_STYLES: Record<string, { color: string; label: string }> = {
 };
 
 export function Experience() {
+  const timelineRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: timelineRef,
+    offset: ["start center", "end center"],
+  });
+  const lineProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+
   return (
     <section id="experience" className="section-padding overflow-hidden relative">
       <HackedOverlay />
@@ -34,14 +43,21 @@ export function Experience() {
 
         {/* Timeline */}
         <motion.div
+          ref={timelineRef}
           variants={staggerContainer}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
           className="relative max-w-3xl mx-auto"
         >
-          {/* Vertical line */}
+          {/* Vertical line (track) */}
           <div className="absolute left-4 md:left-1/2 md:-translate-x-[0.5px] top-0 bottom-0 w-[1px] bg-border" />
+          {/* Vertical line (draws in as you scroll the timeline) */}
+          <motion.div
+            style={{ scaleY: lineProgress }}
+            className="absolute left-4 md:left-1/2 md:-translate-x-[0.5px] top-0 bottom-0 w-[1px] bg-cyan origin-top pointer-events-none"
+            aria-hidden="true"
+          />
 
           {EXPERIENCE.map((item, i) => {
             const style = TYPE_STYLES[item.type];
@@ -110,24 +126,26 @@ export function Experience() {
           >
             {CERTIFICATIONS.map((cert) => (
               <motion.div key={cert.name} variants={fadeUp}>
-                <div className="glass-card p-6 text-center">
-                  <h4 className="text-sm font-semibold text-foreground mb-1">
-                    {cert.name}
-                  </h4>
-                  <p className="text-xs text-cyan mb-3">{cert.issuer}</p>
-                  <div className="flex items-center justify-center gap-3">
-                    <span className="text-xs text-muted">{cert.year}</span>
-                    <span
-                      className={`px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider rounded ${
-                        cert.status === "Active"
-                          ? "text-emerald-400 bg-emerald-400/10"
-                          : "text-amber-400 bg-amber-400/10"
-                      }`}
-                    >
-                      {cert.status}
-                    </span>
+                <TiltCard>
+                  <div className="glass-card p-6 text-center">
+                    <h4 className="text-sm font-semibold text-foreground mb-1">
+                      {cert.name}
+                    </h4>
+                    <p className="text-xs text-cyan mb-3">{cert.issuer}</p>
+                    <div className="flex items-center justify-center gap-3">
+                      <span className="text-xs text-muted">{cert.year}</span>
+                      <span
+                        className={`px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider rounded ${
+                          cert.status === "Active"
+                            ? "text-emerald-400 bg-emerald-400/10"
+                            : "text-amber-400 bg-amber-400/10"
+                        }`}
+                      >
+                        {cert.status}
+                      </span>
+                    </div>
                   </div>
-                </div>
+                </TiltCard>
               </motion.div>
             ))}
           </motion.div>

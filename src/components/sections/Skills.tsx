@@ -3,37 +3,10 @@
 import { motion } from "framer-motion";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { GlassPanel } from "@/components/ui/GlassPanel";
+import { TiltCard } from "@/components/ui/TiltCard";
 import { SKILLS } from "@/lib/constants";
 import { fadeUp, staggerContainer } from "@/lib/animations";
 import { HackedOverlay } from "@/components/ui/HackedOverlay";
-
-// Per-category hover color themes
-const CATEGORY_COLORS: Record<string, { text: string; border: string; bg: string; shadow: string }> = {
-  "Security Operations": {
-    text: "hover:text-cyan",
-    border: "hover:border-cyan/30",
-    bg: "hover:bg-cyan/[0.04]",
-    shadow: "hover:shadow-[0_0_12px_rgba(6,182,212,0.08)]",
-  },
-  "Network Security": {
-    text: "hover:text-emerald-400",
-    border: "hover:border-emerald-400/30",
-    bg: "hover:bg-emerald-400/[0.04]",
-    shadow: "hover:shadow-[0_0_12px_rgba(52,211,153,0.08)]",
-  },
-  "Access & Compliance": {
-    text: "hover:text-amber-400",
-    border: "hover:border-amber-400/30",
-    bg: "hover:bg-amber-400/[0.04]",
-    shadow: "hover:shadow-[0_0_12px_rgba(251,191,36,0.08)]",
-  },
-  "Infrastructure & Tools": {
-    text: "hover:text-violet-400",
-    border: "hover:border-violet-400/30",
-    bg: "hover:bg-violet-400/[0.04]",
-    shadow: "hover:shadow-[0_0_12px_rgba(167,139,250,0.08)]",
-  },
-};
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   "Security Operations": (
@@ -78,33 +51,38 @@ export function Skills() {
         >
           {SKILLS.map((category) => (
             <motion.div key={category.category} variants={fadeUp}>
-              <GlassPanel variant="card" className="p-8 h-full">
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="w-10 h-10 rounded-lg bg-cyan/10 border border-cyan/20 flex items-center justify-center">
-                    {CATEGORY_ICONS[category.category]}
+              <TiltCard className="h-full">
+                <GlassPanel variant="card" className="p-8 h-full">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="w-10 h-10 rounded-lg bg-cyan/10 border border-cyan/20 flex items-center justify-center">
+                      {CATEGORY_ICONS[category.category]}
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground tracking-tight">
+                      {category.category}
+                    </h3>
                   </div>
-                  <h3 className="text-lg font-semibold text-foreground tracking-tight">
-                    {category.category}
-                  </h3>
-                </div>
-                <div className="flex flex-wrap gap-2.5">
-                  {category.items.map((skill) => {
-                    const colors = CATEGORY_COLORS[category.category] || CATEGORY_COLORS["Security Operations"];
-                    return (
-                      <span
-                        key={skill.name}
-                        className={`group/tag relative px-3.5 py-2 text-sm text-muted bg-white/[0.03] border border-border rounded-lg ${colors.text} ${colors.border} ${colors.bg} ${colors.shadow} transition-all duration-300 cursor-default`}
-                      >
-                        {skill.name}
-                        {/* Percentage tooltip — absolute so it doesn't affect layout */}
-                        <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-surface border border-border font-mono text-xs text-muted opacity-0 group-hover/tag:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
-                          {skill.level}%
-                        </span>
-                      </span>
-                    );
-                  })}
-                </div>
-              </GlassPanel>
+                  <div className="space-y-4">
+                    {category.items.map((skill) => (
+                      <div key={skill.name} className="space-y-1.5">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-sm text-muted">{skill.name}</span>
+                          <span className="font-mono text-xs text-subtle shrink-0">{skill.level}%</span>
+                        </div>
+                        <div className="skill-bar">
+                          <motion.div
+                            className="skill-bar-fill"
+                            initial={{ scaleX: 0 }}
+                            whileInView={{ scaleX: skill.level / 100 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1], delay: 0.1 }}
+                            style={{ originX: 0 }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </GlassPanel>
+              </TiltCard>
             </motion.div>
           ))}
         </motion.div>

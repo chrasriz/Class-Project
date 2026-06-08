@@ -36,7 +36,7 @@ export function Hero() {
         <motion.h1
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 1.2, ease: [0, 0, 0.2, 1] }}
+          transition={{ duration: 0.8, delay: 0.15, ease: [0, 0, 0.2, 1] }}
           className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-6"
         >
           <span className="text-gradient">{SITE_CONFIG.name}</span>
@@ -46,7 +46,7 @@ export function Hero() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 1.5 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
           className="h-10 mb-8 overflow-hidden"
         >
           <motion.p
@@ -65,7 +65,7 @@ export function Hero() {
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 1.7 }}
+          transition={{ duration: 0.6, delay: 0.45 }}
           className="max-w-2xl mx-auto text-muted text-base md:text-lg leading-relaxed mb-12"
         >
           Securing networks. Engineering resilient systems. Building the
@@ -76,7 +76,7 @@ export function Hero() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 1.9 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <MagneticButton href="#experience" variant="primary">
@@ -94,7 +94,7 @@ export function Hero() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 2.5 }}
+          transition={{ delay: 0.9 }}
           className="absolute bottom-12 left-1/2 -translate-x-1/2"
         >
           <motion.div

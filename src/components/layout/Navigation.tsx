@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS, SITE_CONFIG } from "@/lib/constants";
 import { navReveal } from "@/lib/animations";
 import { useHacked } from "@/lib/hacked-context";
+import { useActiveSection } from "@/hooks/useActiveSection";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 const CIPHER_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*!?";
+const SECTION_IDS = NAV_ITEMS.map((item) => item.href.slice(1));
 
 function useScrambledLabel(text: string, active: boolean) {
   const [scrambled, setScrambled] = useState(text);
@@ -34,13 +37,15 @@ function useScrambledLabel(text: string, active: boolean) {
 
 function NavLabel({ label, isContact }: { label: string; isContact: boolean }) {
   const { isHacked } = useHacked();
-  const scrambled = useScrambledLabel(label, isHacked && !isContact);
+  const reducedMotion = useReducedMotion();
+  const scrambled = useScrambledLabel(label, isHacked && !isContact && !reducedMotion);
   return <>{scrambled}</>;
 }
 
 function LogoLabel() {
   const { isHacked } = useHacked();
-  const scrambled = useScrambledLabel(SITE_CONFIG.name, isHacked);
+  const reducedMotion = useReducedMotion();
+  const scrambled = useScrambledLabel(SITE_CONFIG.name, isHacked && !reducedMotion);
   return <>{scrambled}</>;
 }
 
@@ -48,6 +53,10 @@ export function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isHacked } = useHacked();
+  const activeSection = useActiveSection(SECTION_IDS);
+
+  const { scrollYProgress } = useScroll();
+  const progressX = useSpring(scrollYProgress, { stiffness: 120, damping: 30, restDelta: 0.001 });
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -66,6 +75,13 @@ export function Navigation() {
 
   return (
     <>
+      {/* Scroll progress bar */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-[2px] bg-cyan origin-left z-[55] pointer-events-none"
+        style={{ scaleX: progressX }}
+        aria-hidden="true"
+      />
+
       <motion.header
         variants={navReveal}
         initial="hidden"
@@ -89,19 +105,32 @@ export function Navigation() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-1">
-            {NAV_ITEMS.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "relative px-4 py-2 text-sm transition-colors duration-300 group",
-                  isHacked && item.label !== "Contact" ? "text-red-400/60 pointer-events-none" : "text-muted hover:text-foreground"
-                )}
-              >
-                <NavLabel label={item.label} isContact={item.label === "Contact"} />
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[1px] bg-cyan/50 transition-all duration-300 group-hover:w-3/4" />
-              </a>
-            ))}
+            {NAV_ITEMS.map((item) => {
+              const isActive = activeSection === item.href.slice(1);
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  aria-current={isActive ? "true" : undefined}
+                  className={cn(
+                    "relative px-4 py-2 text-sm transition-colors duration-300 group",
+                    isHacked && item.label !== "Contact"
+                      ? "text-red-400/60 pointer-events-none"
+                      : isActive
+                      ? "text-foreground"
+                      : "text-muted hover:text-foreground"
+                  )}
+                >
+                  <NavLabel label={item.label} isContact={item.label === "Contact"} />
+                  <span
+                    className={cn(
+                      "absolute bottom-0 left-1/2 -translate-x-1/2 h-[1px] bg-cyan/50 transition-all duration-300",
+                      isActive ? "w-3/4" : "w-0 group-hover:w-3/4"
+                    )}
+                  />
+                </a>
+              );
+            })}
             <a
               href="#contact"
               className={cn(
@@ -148,33 +177,38 @@ export function Navigation() {
             className="fixed inset-0 z-40 bg-background/95 backdrop-blur-2xl md:hidden"
           >
             <nav className="flex flex-col items-center justify-center h-full gap-8">
-              {NAV_ITEMS.map((item, i) => (
-                <motion.a
-                  key={item.href}
-                  href={item.href}
-                  onClick={(e) => {
-                    setMobileOpen(false);
-                    if (item.href.startsWith("#")) {
-                      e.preventDefault();
-                      setTimeout(() => {
-                        const el = document.querySelector(item.href);
-                        if (el) el.scrollIntoView({ behavior: "smooth" });
-                      }, 350);
-                    }
-                  }}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 + 0.1 }}
-                  className={cn(
-                    "text-2xl font-light transition-colors",
-                    isHacked && item.label !== "Contact"
-                      ? "text-red-400/60 pointer-events-none"
-                      : "text-foreground hover:text-cyan"
-                  )}
-                >
-                  <NavLabel label={item.label} isContact={item.label === "Contact"} />
-                </motion.a>
-              ))}
+              {NAV_ITEMS.map((item, i) => {
+                const isActive = activeSection === item.href.slice(1);
+                return (
+                  <motion.a
+                    key={item.href}
+                    href={item.href}
+                    onClick={(e) => {
+                      setMobileOpen(false);
+                      if (item.href.startsWith("#")) {
+                        e.preventDefault();
+                        setTimeout(() => {
+                          const el = document.querySelector(item.href);
+                          if (el) el.scrollIntoView({ behavior: "smooth" });
+                        }, 350);
+                      }
+                    }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 + 0.1 }}
+                    className={cn(
+                      "text-2xl font-light transition-colors",
+                      isHacked && item.label !== "Contact"
+                        ? "text-red-400/60 pointer-events-none"
+                        : isActive
+                        ? "text-cyan"
+                        : "text-foreground hover:text-cyan"
+                    )}
+                  >
+                    <NavLabel label={item.label} isContact={item.label === "Contact"} />
+                  </motion.a>
+                );
+              })}
             </nav>
           </motion.div>
         )}

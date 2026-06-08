@@ -265,7 +265,6 @@ body {
   border-radius: 2px;
   background: linear-gradient(90deg, var(--color-cyan), #22d3ee);
   transform-origin: left;
-  transition: transform 1s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 /* ═══ Contact Terminal — Matrix Rain ═══ */
@@ -407,6 +406,18 @@ body {
   .ambient-orb-3 {
     width: 200px;
     height: 200px;
+  }
+
+  /* Lighter blur on small screens — backdrop-filter is the main scroll cost */
+  .ambient-orb {
+    filter: blur(80px);
+  }
+
+  .glass,
+  .glass-card,
+  .glass-subtle {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 }
 

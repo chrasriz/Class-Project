@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useHacked } from "@/lib/hacked-context";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 const CIPHER_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*!?<>{}[]=/\\|~^█▓▒░";
 
@@ -21,7 +22,8 @@ function useRandomText(length: number, active: boolean) {
 
 export function HackedOverlay() {
   const { isHacked } = useHacked();
-  const scrambled = useRandomText(80, isHacked);
+  const reducedMotion = useReducedMotion();
+  const scrambled = useRandomText(80, isHacked && !reducedMotion);
 
   if (!isHacked) return null;
 
