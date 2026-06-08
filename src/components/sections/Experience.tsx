@@ -18,7 +18,6 @@ const slideFromRight = {
 
 const TYPE_STYLES: Record<string, { color: string; label: string }> = {
   work: { color: "bg-cyan", label: "Work" },
-  certification: { color: "bg-amber-400", label: "Certification" },
   education: { color: "bg-violet-400", label: "Education" },
 };
 

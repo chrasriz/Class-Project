@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS, SITE_CONFIG } from "@/lib/constants";
@@ -10,18 +10,13 @@ import { useHacked } from "@/lib/hacked-context";
 const CIPHER_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*!?";
 
 function useScrambledLabel(text: string, active: boolean) {
-  const [display, setDisplay] = useState(text);
-  const frameRef = useRef<ReturnType<typeof setInterval>>(undefined);
+  const [scrambled, setScrambled] = useState(text);
 
   useEffect(() => {
-    if (!active) {
-      setDisplay(text);
-      clearInterval(frameRef.current);
-      return;
-    }
+    if (!active) return;
     // Continuously scramble while active
-    frameRef.current = setInterval(() => {
-      setDisplay(
+    const id = setInterval(() => {
+      setScrambled(
         text
           .split("")
           .map((ch) =>
@@ -30,10 +25,11 @@ function useScrambledLabel(text: string, active: boolean) {
           .join("")
       );
     }, 80);
-    return () => clearInterval(frameRef.current);
+    return () => clearInterval(id);
   }, [active, text]);
 
-  return display;
+  // While inactive, always render the real label — no state reset needed.
+  return active ? scrambled : text;
 }
 
 function NavLabel({ label, isContact }: { label: string; isContact: boolean }) {

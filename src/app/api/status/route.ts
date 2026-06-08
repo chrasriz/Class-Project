@@ -1,27 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
 import { AUTH_COOKIE, verifyToken } from "@/lib/auth";
 import { checkRate } from "@/lib/rate-limit";
+import { readStatus, writeStatus } from "@/lib/status-store";
 
 export const runtime = "nodejs";
-
-const STATUS_FILE = path.join(process.cwd(), "data", "status.json");
-
-async function readStatus(): Promise<string> {
-  try {
-    const data = await fs.readFile(STATUS_FILE, "utf-8");
-    return JSON.parse(data).text || "Available for opportunities";
-  } catch {
-    return "Available for opportunities";
-  }
-}
-
-async function writeStatus(text: string): Promise<void> {
-  const dir = path.dirname(STATUS_FILE);
-  await fs.mkdir(dir, { recursive: true });
-  await fs.writeFile(STATUS_FILE, JSON.stringify({ text }), "utf-8");
-}
 
 function clientKey(req: NextRequest): string {
   const fwd = req.headers.get("x-forwarded-for");

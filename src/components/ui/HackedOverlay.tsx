@@ -1,25 +1,19 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useHacked } from "@/lib/hacked-context";
 
 const CIPHER_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*!?<>{}[]=/\\|~^█▓▒░";
 
 function useRandomText(length: number, active: boolean) {
   const [text, setText] = useState("");
-  const frameRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   useEffect(() => {
-    if (!active) {
-      setText("");
-      clearInterval(frameRef.current);
-      return;
-    }
+    if (!active) return;
     const generate = () =>
       Array.from({ length }, () => CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)]).join("");
-    setText(generate());
-    frameRef.current = setInterval(() => setText(generate()), 120);
-    return () => clearInterval(frameRef.current);
+    const id = setInterval(() => setText(generate()), 120);
+    return () => clearInterval(id);
   }, [active, length]);
 
   return text;

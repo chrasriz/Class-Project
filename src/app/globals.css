@@ -315,15 +315,6 @@ body {
   background: var(--color-background);
 }
 
-@keyframes loadingPulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
-}
-
-.loading-text {
-  animation: loadingPulse 1.5s ease-in-out infinite;
-}
-
 /* CRT signal glitch */
 @keyframes crtGlitch {
   0%   { transform: translate(0, 0) skewX(0deg); opacity: 1; }

@@ -12,12 +12,21 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 // Characters used for the scramble effect
 const CIPHER_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*!?<>{}[]=/\\|~^";
 
-// Matrix rain column
-function MatrixColumn({ delay, duration, left }: { delay: number; duration: number; left: string }) {
-  const chars = useRef(
-    Array.from({ length: 12 }, () => CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)])
-  ).current;
+// Matrix rain columns — deterministic positions and glyphs so server and client
+// render identically and no randomness runs during render.
+const MATRIX_COLUMNS = Array.from({ length: 20 }, (_, i) => ({
+  id: i,
+  left: `${(i / 20) * 100}%`,
+  delay: (i * 0.7) % 4,
+  duration: 4 + (i % 3) * 2,
+  chars: Array.from(
+    { length: 12 },
+    (_, j) => CIPHER_CHARS[(i * 7 + j * 13) % CIPHER_CHARS.length]
+  ),
+}));
 
+// Matrix rain column
+function MatrixColumn({ delay, duration, left, chars }: { delay: number; duration: number; left: string; chars: string[] }) {
   return (
     <div
       className="matrix-column absolute top-0 text-[10px] font-mono leading-[14px] text-cyan/30 pointer-events-none select-none"
@@ -445,8 +454,13 @@ export function Contact() {
     phaseTimerRef.current = setTimeout(() => setPhase("decrypting"), 1500);
   }, [phase, allConfigured, isCriticallyInsecure, isHacked, setHacked, resetScramble]);
 
+  // Advance the state machine when the scramble animation finishes. This is a
+  // deliberate effect: it reacts to an async completion signal (emailRevealed)
+  // and must read the latest phase/isHacked, which the deps provide. A callback
+  // would capture stale values; deriving it would touch every render site.
   useEffect(() => {
     if (emailRevealed && phase === "decrypting") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPhase("revealed");
       if (isHacked) {
         setHacked(false);
@@ -461,16 +475,6 @@ export function Contact() {
       clearTimeout(phaseTimerRef.current);
     };
   }, []);
-
-  // Matrix rain columns (deterministic positions)
-  const matrixColumns = useRef(
-    Array.from({ length: 20 }, (_, i) => ({
-      id: i,
-      left: `${(i / 20) * 100}%`,
-      delay: (i * 0.7) % 4,
-      duration: 4 + (i % 3) * 2,
-    }))
-  ).current;
 
   return (
     <section id="contact" className="section-padding" ref={sectionRef}>
@@ -493,8 +497,8 @@ export function Contact() {
               {/* Matrix rain background — skipped for prefers-reduced-motion */}
               {!reducedMotion && (
                 <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
-                  {isInView && matrixColumns.map((col) => (
-                    <MatrixColumn key={col.id} left={col.left} delay={col.delay} duration={col.duration} />
+                  {isInView && MATRIX_COLUMNS.map((col) => (
+                    <MatrixColumn key={col.id} left={col.left} delay={col.delay} duration={col.duration} chars={col.chars} />
                   ))}
                 </div>
               )}
@@ -723,7 +727,7 @@ export function Contact() {
                       transition={{ duration: 0.3 }}
                     >
                       <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-red-400 mb-6">
-                        /// SYSTEM BREACH DETECTED ///
+                        {"/// SYSTEM BREACH DETECTED ///"}
                       </p>
                       <span className="block font-mono text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-red-500/40 mb-8 select-none break-all hacked-text-pulse">
                         {"█".repeat(email.length)}

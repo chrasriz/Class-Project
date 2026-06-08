@@ -6,13 +6,11 @@ import { glassReveal } from "@/lib/animations";
 
 interface GlassPanelProps extends HTMLMotionProps<"div"> {
   variant?: "default" | "subtle" | "card";
-  glow?: boolean;
   animate?: boolean;
 }
 
 export function GlassPanel({
   variant = "default",
-  glow = false,
   animate = true,
   className,
   children,
@@ -30,11 +28,7 @@ export function GlassPanel({
       initial={animate ? "hidden" : undefined}
       whileInView={animate ? "visible" : undefined}
       viewport={{ once: true, margin: "-50px" }}
-      className={cn(
-        base,
-        glow && "shadow-[var(--glow-cyan)]",
-        className
-      )}
+      className={cn(base, className)}
       {...props}
     >
       {children}
