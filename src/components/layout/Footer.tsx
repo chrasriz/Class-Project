@@ -1,9 +1,13 @@
 "use client";
 
-import { SITE_CONFIG, NAV_ITEMS } from "@/lib/constants";
+import { SITE_CONFIG, NAV_ITEMS, getEmail } from "@/lib/constants";
 import { HackedOverlay } from "@/components/ui/HackedOverlay";
+import { useContactReveal } from "@/lib/contact-reveal-context";
 
 export function Footer() {
+  const { emailRevealed } = useContactReveal();
+  const email = emailRevealed ? getEmail() : "";
+
   return (
     <footer className="relative border-t border-border">
       <HackedOverlay />
@@ -51,12 +55,26 @@ export function Footer() {
               >
                 LinkedIn
               </a>
-              <a
-                href={`mailto:${SITE_CONFIG.email}`}
-                className="text-sm text-muted hover:text-foreground transition-colors"
-              >
-                {SITE_CONFIG.email}
-              </a>
+              {emailRevealed ? (
+                <a
+                  href={`mailto:${email}`}
+                  className="text-sm text-muted hover:text-foreground transition-colors"
+                >
+                  {email}
+                </a>
+              ) : (
+                <a
+                  href="#contact"
+                  title="Decrypt the signal in the Contact section to reveal"
+                  className="group inline-flex items-center gap-2 text-sm text-subtle hover:text-cyan transition-colors font-mono"
+                >
+                  <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                  </svg>
+                  <span className="tracking-wider">••••••••@•••••••</span>
+                  <span className="text-[10px] tracking-wider text-cyan/60 group-hover:text-cyan">decrypt&nbsp;↓</span>
+                </a>
+              )}
             </div>
           </div>
         </div>

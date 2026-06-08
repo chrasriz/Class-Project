@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 const NAME = "Rasikh";
+const DECRYPT_INTERVAL = 110; // ms per character during the decrypt reveal
 const CIPHER_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*!?<>{}[]=/\\|~^";
 
 // Pre-computed speed line data outside the component
@@ -64,14 +65,15 @@ export function LoadingScreen() {
       setLoading(false);
       return;
     }
-    const decryptEnd = 2200 + NAME.length * 150 + 300;
-    const glitchStart = decryptEnd + 1150; // 50ms after subtitle + tagline fully appear
-    const exitTime = glitchStart + 750; // 50ms after glitch ends (700ms)
+    const decryptStart = 1250;
+    const decryptEnd = decryptStart + NAME.length * DECRYPT_INTERVAL + 150;
+    const glitchStart = decryptEnd + 600; // brief dwell on the resolved name + subtitle
+    const exitTime = glitchStart + 450; // glitch flourish, then fade out (~3.1s total)
 
     const timers = [
-      setTimeout(() => setPhase("bars"), 300),
-      setTimeout(() => setPhase("scramble"), 800),
-      setTimeout(() => setPhase("decrypt"), 2200),
+      setTimeout(() => setPhase("bars"), 200),
+      setTimeout(() => setPhase("scramble"), 450),
+      setTimeout(() => setPhase("decrypt"), decryptStart),
       setTimeout(() => setPhase("done"), decryptEnd),
       setTimeout(() => setPhase("glitch"), glitchStart),
       setTimeout(() => setLoading(false), exitTime),
@@ -114,7 +116,7 @@ export function LoadingScreen() {
             })
             .join("")
         );
-      }, 150);
+      }, DECRYPT_INTERVAL);
       return () => clearInterval(interval);
     }
 
@@ -266,7 +268,7 @@ export function LoadingScreen() {
                 ? { opacity: 1, y: 0, letterSpacing: "0.4em", color: "rgba(6,182,212,0.7)" }
                 : {}
             }
-            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
           >
             Cybersecurity Analyst
           </motion.p>
@@ -276,7 +278,7 @@ export function LoadingScreen() {
             className="absolute bottom-[12%] flex items-center gap-3 z-10"
             initial={{ opacity: 0 }}
             animate={showSubtitle ? { opacity: 1 } : {}}
-            transition={{ delay: 0.5, duration: 0.6 }}
+            transition={{ delay: 0.25, duration: 0.4 }}
           >
             <div className="w-8 h-[1px] bg-gradient-to-r from-transparent to-cyan/40" />
             <span className="text-[10px] font-mono text-subtle tracking-widest uppercase">

@@ -12,36 +12,39 @@ import { Skills } from "@/components/sections/Skills";
 import { Experience } from "@/components/sections/Experience";
 import { Contact } from "@/components/sections/Contact";
 import { HackedProvider } from "@/lib/hacked-context";
+import { ContactRevealProvider } from "@/lib/contact-reveal-context";
 
 export default function Home() {
   return (
     <HackedProvider>
-      <MotionConfig reducedMotion="user">
-        <LoadingScreen />
-        <AmbientBackground />
-        <CommandPalette />
-        <Navigation />
+      <ContactRevealProvider>
+        <MotionConfig reducedMotion="user">
+          <LoadingScreen />
+          <AmbientBackground />
+          <CommandPalette />
+          <Navigation />
 
-        <main id="main-content">
-          <Hero />
+          <main id="main-content">
+            <Hero />
 
-          {/* Section divider */}
-          <div className="glow-line max-w-xs mx-auto" />
+            {/* Section divider */}
+            <div className="glow-line max-w-xs mx-auto" />
 
-          <About />
-          <div className="glow-line max-w-xs mx-auto" />
+            <About />
+            <div className="glow-line max-w-xs mx-auto" />
 
-          <Skills />
-          <div className="glow-line max-w-xs mx-auto" />
+            <Skills />
+            <div className="glow-line max-w-xs mx-auto" />
 
-          <Experience />
-          <div className="glow-line max-w-xs mx-auto" />
+            <Experience />
+            <div className="glow-line max-w-xs mx-auto" />
 
-          <Contact />
-        </main>
+            <Contact />
+          </main>
 
-        <Footer />
-      </MotionConfig>
+          <Footer />
+        </MotionConfig>
+      </ContactRevealProvider>
     </HackedProvider>
   );
 }

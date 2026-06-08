@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { NAV_ITEMS, SITE_CONFIG } from "@/lib/constants";
+import { NAV_ITEMS, SITE_CONFIG, getEmail } from "@/lib/constants";
 import { useHacked } from "@/lib/hacked-context";
+import { useContactReveal } from "@/lib/contact-reveal-context";
 
 type Command = {
   id: string;
@@ -20,6 +21,7 @@ export function CommandPalette() {
   const inputRef = useRef<HTMLInputElement>(null);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const { isHacked, setHacked } = useHacked();
+  const { emailRevealed } = useContactReveal();
 
   const showToast = useCallback((msg: string) => setToast(msg), []);
 
@@ -38,6 +40,38 @@ export function CommandPalette() {
       run: () => document.querySelector(item.href)?.scrollIntoView({ behavior: "smooth" }),
     }));
 
+    // Email actions only appear once the visitor has decrypted it in Contact.
+    const emailCommands: Command[] = emailRevealed
+      ? [
+          {
+            id: "copy-email",
+            label: "Copy email address",
+            hint: "Copy",
+            run: async () => {
+              try {
+                await navigator.clipboard?.writeText(getEmail());
+                showToast(`Copied ${getEmail()}`);
+              } catch {
+                showToast("Couldn't copy — select it manually");
+              }
+            },
+          },
+          {
+            id: "email",
+            label: "Send me an email",
+            hint: "Mail",
+            run: () => { window.location.href = `mailto:${getEmail()}`; },
+          },
+        ]
+      : [
+          {
+            id: "reveal-email",
+            label: "Reveal email address",
+            hint: "Decrypt ↓",
+            run: () => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" }),
+          },
+        ];
+
     return [
       ...nav,
       {
@@ -46,25 +80,7 @@ export function CommandPalette() {
         hint: "Home",
         run: () => window.scrollTo({ top: 0, behavior: "smooth" }),
       },
-      {
-        id: "copy-email",
-        label: "Copy email address",
-        hint: "Copy",
-        run: async () => {
-          try {
-            await navigator.clipboard?.writeText(SITE_CONFIG.email);
-            showToast(`Copied ${SITE_CONFIG.email}`);
-          } catch {
-            showToast("Couldn't copy — select it manually");
-          }
-        },
-      },
-      {
-        id: "email",
-        label: "Send me an email",
-        hint: "Mail",
-        run: () => { window.location.href = `mailto:${SITE_CONFIG.email}`; },
-      },
+      ...emailCommands,
       {
         id: "linkedin",
         label: "Open LinkedIn",
@@ -78,7 +94,7 @@ export function CommandPalette() {
         run: () => setHacked(!isHacked),
       },
     ];
-  }, [isHacked, setHacked, showToast]);
+  }, [isHacked, setHacked, showToast, emailRevealed]);
 
   const filtered = useMemo(
     () => commands.filter((cmd) => cmd.label.toLowerCase().includes(query.toLowerCase())),

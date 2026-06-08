@@ -4,9 +4,10 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, useInView } from "framer-motion";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { GlassPanel } from "@/components/ui/GlassPanel";
-import { SITE_CONFIG } from "@/lib/constants";
+import { SITE_CONFIG, getEmail } from "@/lib/constants";
 import { fadeUp } from "@/lib/animations";
 import { useHacked } from "@/lib/hacked-context";
+import { useContactReveal } from "@/lib/contact-reveal-context";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 // Characters used for the scramble effect
@@ -345,8 +346,9 @@ export function Contact() {
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
   const reducedMotion = useReducedMotion();
   const [phase, setPhase] = useState<"idle" | "scanning" | "decrypting" | "revealed" | "hacked">("idle");
-  const email = SITE_CONFIG.email;
+  const email = getEmail();
   const { isHacked, setHacked } = useHacked();
+  const { revealEmail } = useContactReveal();
   const { display: scrambledEmail, done: emailRevealed, reset: resetScramble } = useScrambleText(
     email,
     phase === "decrypting",
@@ -465,8 +467,9 @@ export function Contact() {
       if (isHacked) {
         setHacked(false);
       }
+      revealEmail();
     }
-  }, [emailRevealed, phase, isHacked, setHacked]);
+  }, [emailRevealed, phase, isHacked, setHacked, revealEmail]);
 
   // Cleanup timers on unmount
   useEffect(() => {

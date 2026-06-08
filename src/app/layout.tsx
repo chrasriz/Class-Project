@@ -87,7 +87,6 @@ const personJsonLd = {
   name: "Chaudhry Rasikh Rizwan",
   alternateName: "Rasikh Rizwan",
   url: "https://chrasriz.com",
-  email: "mailto:connect@chrasriz.com",
   jobTitle: "Cybersecurity Analyst",
   address: {
     "@type": "PostalAddress",

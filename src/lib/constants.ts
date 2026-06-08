@@ -6,11 +6,18 @@ export const SITE_CONFIG = {
   url: "https://chrasriz.com",
   location: "Toronto, Canada",
   role: "Cybersecurity Analyst | IT Professional",
-  email: "connect@chrasriz.com",
   socials: {
     linkedin: "https://www.linkedin.com/in/ch-rasikh-rizwan/",
   },
 };
+
+// Email kept base64-encoded so the literal address never sits in the page
+// source or JS bundle as plaintext. Decoded at runtime only.
+const EMAIL_ENCODED = "Y29ubmVjdEBjaHJhc3Jpei5jb20=";
+
+export function getEmail(): string {
+  return atob(EMAIL_ENCODED);
+}
 
 export const NAV_ITEMS = [
   { label: "About", href: "#about" },
