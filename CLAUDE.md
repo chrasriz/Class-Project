@@ -22,18 +22,16 @@ node_modules/.bin/eslint .          # don't add new errors
 - If you can't run a check, say so explicitly.
 
 ## 3. Secrets & env
-- **Never commit secrets.** `.env*.local` stays untracked; `.env.example` holds documented placeholders only.
+- **Never commit secrets.** `.env*.local` stays untracked. If you add an env var, document it in a committed `.env.example` (placeholder values only — no real secrets).
 - A leaked key is compromised — rotation is the fix; removing it from a commit is not. Surface it, don't silently "clean it up."
 - Read env via `process.env`; document every new var in `.env.example` with what it's for and what breaks without it.
 
-## 4. Persistence reality
-- This deploys to serverless — **the filesystem is not writable/persistent in production.** Never use files as a data store for runtime writes. Use the configured store (`src/lib/status-store.ts` → Upstash Redis) with a local fallback for `next dev`.
+## 4. No backend
+- This is a fully static portfolio — no API routes, auth, or data store. Keep it static unless a feature genuinely needs a server. If you ever add server writes, never use the filesystem as the store (serverless is read-only) — use a managed store.
 
-## 5. Security (don't regress these patterns)
-- Auth uses HMAC-signed cookies + `timingSafeEqual` (`src/lib/auth.ts`); cookies are `httpOnly`, `sameSite: strict`, `secure` in prod. Keep it that way.
-- Validate and bound every API input (type-check, trim, length-cap) before use; return typed JSON errors with correct status codes.
+## 5. Security
 - Keep the security headers in `next.config.ts`. Don't widen `Permissions-Policy` or drop HSTS without a reason.
-- Rate-limit mutating/auth endpoints; keep the limiter's memory bounded.
+- If you add a server route: validate and bound every input (type-check, trim, length-cap), return typed JSON errors with correct status codes, and rate-limit anything mutating or auth-related.
 
 ## 6. Code style — match what's there
 - Mirror the surrounding file's conventions: named exports, `@/*` import alias, `cn()` for class merging, `"use client"` only where required.
