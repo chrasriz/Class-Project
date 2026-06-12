@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { useScramble, type ScrambleMode } from "@/lib/scramble";
 
 const NAME = "Rasikh";
 const DECRYPT_INTERVAL = 110; // ms per character during the decrypt reveal
-const CIPHER_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*!?<>{}[]=/\\|~^";
+const INTRO_SEEN_KEY = "rskh:intro-seen";
 
 // Pre-computed speed line data outside the component
 const SPEED_LINE_DATA = Array.from({ length: 15 }).map((_, i) => ({
@@ -27,7 +28,7 @@ function SpeedLines() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
       {SPEED_LINE_DATA.map((line, i) => (
-        <motion.div
+        <m.div
           key={i}
           className="absolute h-[1px] bg-gradient-to-l from-cyan/30 to-transparent"
           style={{
@@ -52,18 +53,39 @@ function SpeedLines() {
   );
 }
 
+const PHASE_MODE: Record<string, ScrambleMode> = {
+  init: "blocks",
+  bars: "blocks",
+  scramble: "loop",
+  decrypt: "decrypt",
+  done: "text",
+  glitch: "text",
+};
+
 export function LoadingScreen() {
   const reducedMotion = useReducedMotion();
   const [loading, setLoading] = useState(!reducedMotion);
   // Phases: "init" → "bars" → "scramble" → "decrypt" → "done" → "glitch"
   const [phase, setPhase] = useState<"init" | "bars" | "scramble" | "decrypt" | "done" | "glitch">("init");
-  const [displayText, setDisplayText] = useState("█".repeat(NAME.length));
+  const displayText = useScramble(NAME, PHASE_MODE[phase], {
+    speed: phase === "decrypt" ? DECRYPT_INTERVAL : 50,
+  });
 
-  // Phase sequencing
+  // Phase sequencing — full cinematic once per session, skipped on revisits.
   useEffect(() => {
-    if (reducedMotion) {
-      setLoading(false);
-      return;
+    // try/catch: a storage failure must never leave the opaque loader stuck.
+    let introSeen = false;
+    try {
+      introSeen = sessionStorage.getItem(INTRO_SEEN_KEY) !== null;
+      sessionStorage.setItem(INTRO_SEEN_KEY, "1");
+    } catch {
+      // storage unavailable — treat as first visit
+    }
+    if (reducedMotion || introSeen) {
+      // Deferred a frame: storage can't be read during render (hydration),
+      // and setState directly in an effect body is a lint error.
+      const skip = setTimeout(() => setLoading(false), 0);
+      return () => clearTimeout(skip);
     }
     const decryptStart = 1250;
     const decryptEnd = decryptStart + NAME.length * DECRYPT_INTERVAL + 150;
@@ -81,49 +103,6 @@ export function LoadingScreen() {
     return () => timers.forEach(clearTimeout);
   }, [reducedMotion]);
 
-  // Scramble / decrypt text effect
-  useEffect(() => {
-    if (phase === "init" || phase === "bars") {
-      setDisplayText("█".repeat(NAME.length));
-      return;
-    }
-
-    if (phase === "scramble") {
-      const interval = setInterval(() => {
-        setDisplayText(
-          NAME.split("")
-            .map(() => CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)])
-            .join("")
-        );
-      }, 50);
-      return () => clearInterval(interval);
-    }
-
-    if (phase === "decrypt") {
-      let revealed = 0;
-      const interval = setInterval(() => {
-        revealed++;
-        if (revealed > NAME.length) {
-          clearInterval(interval);
-          setDisplayText(NAME);
-          return;
-        }
-        setDisplayText(
-          NAME.split("")
-            .map((char, i) => {
-              if (i < revealed) return char;
-              return CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)];
-            })
-            .join("")
-        );
-      }, DECRYPT_INTERVAL);
-      return () => clearInterval(interval);
-    }
-
-    // phase === "done" or "glitch" — keep final text
-    setDisplayText(NAME);
-  }, [phase]);
-
   const showBars = phase !== "init";
   const showSpeedLines = phase === "scramble" || phase === "decrypt";
   const showSubtitle = phase === "done" || phase === "glitch";
@@ -132,7 +111,7 @@ export function LoadingScreen() {
   return (
     <AnimatePresence>
       {loading && (
-        <motion.div
+        <m.div
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.05 }}
@@ -141,14 +120,14 @@ export function LoadingScreen() {
           aria-label="Loading"
         >
           {/* Cinematic letterbox bars */}
-          <motion.div
+          <m.div
             className="absolute top-0 left-0 right-0 bg-black z-20"
             initial={{ height: "0%" }}
             animate={{ height: showBars ? "8%" : "0%" }}
             exit={{ height: "0%" }}
             transition={{ duration: 0.8, ease: "easeInOut" }}
           />
-          <motion.div
+          <m.div
             className="absolute bottom-0 left-0 right-0 bg-black z-20"
             initial={{ height: "0%" }}
             animate={{ height: showBars ? "8%" : "0%" }}
@@ -160,7 +139,7 @@ export function LoadingScreen() {
           {showSpeedLines && <SpeedLines />}
 
           {/* Radial glow */}
-          <motion.div
+          <m.div
             className="absolute inset-0 flex items-center justify-center pointer-events-none"
             animate={{
               opacity: showSubtitle ? 0.4 : phase !== "init" ? 0.15 : 0,
@@ -174,10 +153,10 @@ export function LoadingScreen() {
                   "radial-gradient(circle, rgba(6,182,212,0.3) 0%, rgba(6,182,212,0.05) 40%, transparent 70%)",
               }}
             />
-          </motion.div>
+          </m.div>
 
           {/* Screen flash when decrypt starts */}
-          <motion.div
+          <m.div
             className="absolute inset-0 bg-cyan/10 pointer-events-none z-10"
             initial={{ opacity: 0 }}
             animate={phase === "decrypt" ? { opacity: [0.15, 0] } : {}}
@@ -205,14 +184,14 @@ export function LoadingScreen() {
           )}
 
           {/* Main content */}
-          <motion.div
+          <m.div
             className={`relative z-10 flex items-center justify-center ${isGlitching ? "crt-glitch" : ""}`}
             animate={showSubtitle && !isGlitching ? { scale: [1, 1.03, 1] } : {}}
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
             <div className="flex items-baseline">
               {/* Name characters — only visible once scramble starts */}
-              <motion.span
+              <m.span
                 initial={{ opacity: 0 }}
                 animate={phase === "scramble" || phase === "decrypt" || phase === "done" || phase === "glitch" ? { opacity: 1 } : {}}
                 transition={{ duration: 0.3 }}
@@ -241,10 +220,10 @@ export function LoadingScreen() {
                     {char}
                   </span>
                 ))}
-              </motion.span>
+              </m.span>
 
               {/* The dot */}
-              <motion.span
+              <m.span
                 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-bold text-cyan inline-block"
                 initial={{ opacity: 0, scale: 0 }}
                 animate={showSubtitle ? { opacity: 1, scale: [0, 1.3, 1] } : {}}
@@ -255,12 +234,12 @@ export function LoadingScreen() {
                 }}
               >
                 .
-              </motion.span>
+              </m.span>
             </div>
-          </motion.div>
+          </m.div>
 
           {/* Subtitle */}
-          <motion.p
+          <m.p
             className="absolute bottom-[28%] text-xs sm:text-sm font-mono tracking-[0.4em] uppercase z-10"
             initial={{ opacity: 0, y: 15, letterSpacing: "0.6em" }}
             animate={
@@ -271,10 +250,10 @@ export function LoadingScreen() {
             transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
           >
             Cybersecurity Analyst
-          </motion.p>
+          </m.p>
 
           {/* Bottom tagline */}
-          <motion.div
+          <m.div
             className="absolute bottom-[12%] flex items-center gap-3 z-10"
             initial={{ opacity: 0 }}
             animate={showSubtitle ? { opacity: 1 } : {}}
@@ -285,8 +264,8 @@ export function LoadingScreen() {
               Securing what matters
             </span>
             <div className="w-8 h-[1px] bg-gradient-to-l from-transparent to-cyan/40" />
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

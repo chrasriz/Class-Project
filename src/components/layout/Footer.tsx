@@ -4,7 +4,7 @@ import { SITE_CONFIG, NAV_ITEMS, getEmail } from "@/lib/constants";
 import { HackedOverlay } from "@/components/ui/HackedOverlay";
 import { useContactReveal } from "@/lib/contact-reveal-context";
 
-export function Footer() {
+export function Footer({ onOpenTerminal }: { onOpenTerminal: () => void }) {
   const { emailRevealed } = useContactReveal();
   const email = emailRevealed ? getEmail() : "";
 
@@ -84,9 +84,17 @@ export function Footer() {
           <p className="text-xs text-subtle">
             &copy; {new Date().getFullYear()} {SITE_CONFIG.name}. All rights reserved.
           </p>
-          <p className="text-xs text-subtle">
-            Designed &amp; engineered with precision.
-          </p>
+          <button
+            onClick={onOpenTerminal}
+            className="group inline-flex items-center gap-2 font-mono text-xs text-subtle hover:text-cyan transition-colors cursor-pointer"
+            title="Open the terminal (or press `)"
+          >
+            <span className="text-cyan/60 group-hover:text-cyan">❯</span>
+            <span className="tracking-wider">terminal</span>
+            <kbd className="hidden md:inline-flex px-1.5 py-0.5 text-[10px] border border-border rounded group-hover:border-cyan/30">
+              `
+            </kbd>
+          </button>
         </div>
       </div>
     </footer>

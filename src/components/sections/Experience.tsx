@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useScroll, useSpring } from "framer-motion";
+import { m, useScroll, useSpring } from "framer-motion";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { EXPERIENCE, CERTIFICATIONS } from "@/lib/constants";
 import { fadeUp, staggerContainer } from "@/lib/animations";
@@ -42,7 +42,7 @@ export function Experience() {
         />
 
         {/* Timeline */}
-        <motion.div
+        <m.div
           ref={timelineRef}
           variants={staggerContainer}
           initial="hidden"
@@ -53,7 +53,7 @@ export function Experience() {
           {/* Vertical line (track) */}
           <div className="absolute left-4 md:left-1/2 md:-translate-x-[0.5px] top-0 bottom-0 w-[1px] bg-border" />
           {/* Vertical line (draws in as you scroll the timeline) */}
-          <motion.div
+          <m.div
             style={{ scaleY: lineProgress }}
             className="absolute left-4 md:left-1/2 md:-translate-x-[0.5px] top-0 bottom-0 w-[1px] bg-cyan origin-top pointer-events-none"
             aria-hidden="true"
@@ -64,7 +64,7 @@ export function Experience() {
             const isLeft = i % 2 === 0;
 
             return (
-              <motion.div
+              <m.div
                 key={`${item.title}-${item.period}`}
                 variants={isLeft ? slideFromLeft : slideFromRight}
                 className={`relative flex items-start gap-6 mb-12 ${
@@ -102,10 +102,10 @@ export function Experience() {
                     {style.label}
                   </span>
                 </div>
-              </motion.div>
+              </m.div>
             );
           })}
-        </motion.div>
+        </m.div>
 
         {/* Certifications Grid */}
         <div className="mt-24">
@@ -115,7 +115,7 @@ export function Experience() {
             description="Industry-recognized credentials validating technical expertise."
           />
 
-          <motion.div
+          <m.div
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
@@ -123,7 +123,7 @@ export function Experience() {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto"
           >
             {CERTIFICATIONS.map((cert) => (
-              <motion.div key={cert.name} variants={fadeUp}>
+              <m.div key={cert.name} variants={fadeUp}>
                 <TiltCard>
                   <div className="glass-card p-6 text-center">
                     <h4 className="text-sm font-semibold text-foreground mb-1">
@@ -144,9 +144,9 @@ export function Experience() {
                     </div>
                   </div>
                 </TiltCard>
-              </motion.div>
+              </m.div>
             ))}
-          </motion.div>
+          </m.div>
         </div>
       </div>
     </section>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, type ReactNode } from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { m, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 /**
@@ -42,7 +42,7 @@ export function TiltCard({
   }
 
   return (
-    <motion.div
+    <m.div
       ref={ref}
       onMouseMove={handleMove}
       onMouseLeave={reset}
@@ -50,6 +50,6 @@ export function TiltCard({
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }

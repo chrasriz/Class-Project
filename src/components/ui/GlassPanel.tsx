@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, type HTMLMotionProps } from "framer-motion";
+import { m, type HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { glassReveal } from "@/lib/animations";
 
@@ -20,7 +20,7 @@ export function GlassPanel({
   }[variant];
 
   return (
-    <motion.div
+    <m.div
       variants={glassReveal}
       initial="hidden"
       whileInView="visible"
@@ -29,6 +29,6 @@ export function GlassPanel({
       {...props}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }

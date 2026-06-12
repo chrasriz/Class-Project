@@ -1,51 +1,28 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
+import { m, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS, SITE_CONFIG } from "@/lib/constants";
 import { navReveal } from "@/lib/animations";
 import { useHacked } from "@/lib/hacked-context";
+import { useScramble } from "@/lib/scramble";
 import { useActiveSection } from "@/hooks/useActiveSection";
-import { useReducedMotion } from "@/hooks/useReducedMotion";
 
-const CIPHER_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*!?";
 const SECTION_IDS = NAV_ITEMS.map((item) => item.href.slice(1));
-
-function useScrambledLabel(text: string, active: boolean) {
-  const [scrambled, setScrambled] = useState(text);
-
-  useEffect(() => {
-    if (!active) return;
-    // Continuously scramble while active
-    const id = setInterval(() => {
-      setScrambled(
-        text
-          .split("")
-          .map((ch) =>
-            ch === " " ? " " : CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)]
-          )
-          .join("")
-      );
-    }, 80);
-    return () => clearInterval(id);
-  }, [active, text]);
-
-  // While inactive, always render the real label — no state reset needed.
-  return active ? scrambled : text;
-}
 
 function NavLabel({ label, isContact }: { label: string; isContact: boolean }) {
   const { isHacked } = useHacked();
-  const reducedMotion = useReducedMotion();
-  const scrambled = useScrambledLabel(label, isHacked && !isContact && !reducedMotion);
+  const scrambled = useScramble(label, isHacked && !isContact ? "loop" : "text", {
+    speed: 80,
+    preserve: " ",
+  });
   return <>{scrambled}</>;
 }
 
 function LogoLabel() {
   const { isHacked } = useHacked();
-  const reducedMotion = useReducedMotion();
-  const scrambled = useScrambledLabel(SITE_CONFIG.name, isHacked && !reducedMotion);
+  const scrambled = useScramble(SITE_CONFIG.name, isHacked ? "loop" : "text", { speed: 80 });
   return <>{scrambled}</>;
 }
 
@@ -79,13 +56,13 @@ export function Navigation() {
   return (
     <>
       {/* Scroll progress bar */}
-      <motion.div
+      <m.div
         className="fixed top-0 left-0 right-0 h-[2px] bg-cyan origin-left z-[55] pointer-events-none"
         style={{ scaleX: progressX }}
         aria-hidden="true"
       />
 
-      <motion.header
+      <m.header
         variants={navReveal}
         initial="hidden"
         animate="visible"
@@ -153,26 +130,26 @@ export function Navigation() {
             className="md:hidden flex flex-col gap-1.5 p-2"
             aria-label="Toggle navigation"
           >
-            <motion.span
+            <m.span
               animate={mobileOpen ? { rotate: 45, y: 6 } : { rotate: 0, y: 0 }}
               className="block w-6 h-[1.5px] bg-foreground"
             />
-            <motion.span
+            <m.span
               animate={mobileOpen ? { opacity: 0 } : { opacity: 1 }}
               className="block w-6 h-[1.5px] bg-foreground"
             />
-            <motion.span
+            <m.span
               animate={mobileOpen ? { rotate: -45, y: -6 } : { rotate: 0, y: 0 }}
               className="block w-6 h-[1.5px] bg-foreground"
             />
           </button>
         </div>
-      </motion.header>
+      </m.header>
 
       {/* Mobile Menu */}
       <AnimatePresence>
         {mobileOpen && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -183,7 +160,7 @@ export function Navigation() {
               {NAV_ITEMS.map((item, i) => {
                 const isActive = activeSection === item.href.slice(1);
                 return (
-                  <motion.a
+                  <m.a
                     key={item.href}
                     href={item.href}
                     onClick={(e) => {
@@ -209,11 +186,11 @@ export function Navigation() {
                     )}
                   >
                     <NavLabel label={item.label} isContact={item.label === "Contact"} />
-                  </motion.a>
+                  </m.a>
                 );
               })}
             </nav>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </>

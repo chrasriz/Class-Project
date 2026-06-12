@@ -1,12 +1,37 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { TiltCard } from "@/components/ui/TiltCard";
-import { SKILLS } from "@/lib/constants";
+import { SKILLS, type SkillTier } from "@/lib/constants";
 import { fadeUp, staggerContainer } from "@/lib/animations";
 import { HackedOverlay } from "@/components/ui/HackedOverlay";
+
+const TIER_META: Record<SkillTier, { label: string; filled: number }> = {
+  core: { label: "Core", filled: 3 },
+  advanced: { label: "Advanced", filled: 2 },
+  working: { label: "Working", filled: 1 },
+};
+
+function TierMeter({ tier, delay }: { tier: SkillTier; delay: number }) {
+  const { filled } = TIER_META[tier];
+  return (
+    <div className="flex gap-1" aria-hidden="true">
+      {[0, 1, 2].map((i) => (
+        <m.span
+          key={i}
+          initial={{ opacity: 0, scaleX: 0 }}
+          whileInView={i < filled ? { opacity: 1, scaleX: 1 } : { opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: delay + i * 0.08 }}
+          style={{ originX: 0 }}
+          className={`w-3.5 h-1.5 rounded-full ${i < filled ? "bg-cyan" : "bg-white/10"}`}
+        />
+      ))}
+    </div>
+  );
+}
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   "Security Operations": (
@@ -42,7 +67,30 @@ export function Skills() {
           description="Core competencies across cybersecurity, networking, infrastructure, and automation."
         />
 
-        <motion.div
+        {/* Tier legend */}
+        <m.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="-mt-8 mb-12 flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
+        >
+          {(Object.keys(TIER_META) as SkillTier[]).map((tier) => (
+            <span key={tier} className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-subtle">
+              <span className="flex gap-1" aria-hidden="true">
+                {[0, 1, 2].map((i) => (
+                  <span
+                    key={i}
+                    className={`w-2.5 h-1 rounded-full ${i < TIER_META[tier].filled ? "bg-cyan/70" : "bg-white/10"}`}
+                  />
+                ))}
+              </span>
+              {TIER_META[tier].label}
+            </span>
+          ))}
+        </m.div>
+
+        <m.div
           variants={staggerContainer}
           initial="hidden"
           whileInView="visible"
@@ -50,7 +98,7 @@ export function Skills() {
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
         >
           {SKILLS.map((category) => (
-            <motion.div key={category.category} variants={fadeUp}>
+            <m.div key={category.category} variants={fadeUp}>
               <TiltCard className="h-full">
                 <GlassPanel variant="card" className="p-8 h-full">
                   <div className="flex items-center gap-3 mb-8">
@@ -62,30 +110,26 @@ export function Skills() {
                     </h3>
                   </div>
                   <div className="space-y-4">
-                    {category.items.map((skill) => (
-                      <div key={skill.name} className="space-y-1.5">
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="text-sm text-muted">{skill.name}</span>
-                          <span className="font-mono text-xs text-subtle shrink-0">{skill.level}%</span>
-                        </div>
-                        <div className="skill-bar">
-                          <motion.div
-                            className="skill-bar-fill"
-                            initial={{ scaleX: 0 }}
-                            whileInView={{ scaleX: skill.level / 100 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1], delay: 0.1 }}
-                            style={{ originX: 0 }}
-                          />
-                        </div>
+                    {category.items.map((skill, i) => (
+                      <div key={skill.name} className="flex items-center justify-between gap-3">
+                        <span className="text-sm text-muted">{skill.name}</span>
+                        <span
+                          className="flex items-center gap-2.5 shrink-0"
+                          title={`${TIER_META[skill.tier].label} proficiency`}
+                        >
+                          <span className="font-mono text-[10px] uppercase tracking-wider text-subtle">
+                            {TIER_META[skill.tier].label}
+                          </span>
+                          <TierMeter tier={skill.tier} delay={i * 0.05} />
+                        </span>
                       </div>
                     ))}
                   </div>
                 </GlassPanel>
               </TiltCard>
-            </motion.div>
+            </m.div>
           ))}
-        </motion.div>
+        </m.div>
       </div>
     </section>
   );

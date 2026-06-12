@@ -1,17 +1,26 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { motion, useInView } from "framer-motion";
+import { useEffect, useReducer, useRef } from "react";
+import { m, useInView } from "framer-motion";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { SITE_CONFIG, getEmail } from "@/lib/constants";
 import { fadeUp } from "@/lib/animations";
 import { useHacked } from "@/lib/hacked-context";
 import { useContactReveal } from "@/lib/contact-reveal-context";
+import { useAchievements } from "@/lib/achievements-context";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
-
-// Characters used for the scramble effect
-const CIPHER_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*!?<>{}[]=/\\|~^";
+import { CIPHER_CHARS, useScramble } from "@/lib/scramble";
+import {
+  CONFIG_OPTIONS,
+  INITIAL_CONTACT_STATE,
+  contactReducer,
+  isConfigured,
+  isCriticallyInsecure,
+  isOptionSecure,
+  isSecureConfig,
+  type ConfigKey,
+} from "@/lib/contact-machine";
 
 // Matrix rain columns — deterministic positions and glyphs so server and client
 // render identically and no randomness runs during render.
@@ -46,131 +55,10 @@ function MatrixColumn({ delay, duration, left, chars }: { delay: number; duratio
   );
 }
 
-// Scramble text hook — decrypts text character by character
-// scrambleCycles = how many random-character ticks before letters start resolving
-function useScrambleText(target: string, active: boolean, speed = 40, scrambleCycles = 12) {
-  const blocks = "█".repeat(target.length);
-  const [display, setDisplay] = useState(blocks);
-  const [done, setDone] = useState(false);
-  const frameRef = useRef<ReturnType<typeof setInterval>>(undefined);
-  const tickRef = useRef(0);
-
-  useEffect(() => {
-    // When active transitions from true → false and we're done, keep the final value
-    if (!active) {
-      clearInterval(frameRef.current);
-      // If we never started or need a reset, show blocks
-      if (!done) {
-        setDisplay(blocks);
-      }
-      return;
-    }
-
-    // Starting fresh — reset state
-    tickRef.current = 0;
-    setDone(false);
-
-    frameRef.current = setInterval(() => {
-      tickRef.current += 1;
-      const tick = tickRef.current;
-
-      // Phase 1: pure scramble — all characters stay random
-      if (tick <= scrambleCycles) {
-        setDisplay(
-          target
-            .split("")
-            .map((char) => {
-              if (char === " " || char === "@" || char === ".") return char;
-              return CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)];
-            })
-            .join("")
-        );
-        return;
-      }
-
-      // Phase 2: reveal one character per tick
-      const revealed = tick - scrambleCycles;
-
-      if (revealed > target.length) {
-        clearInterval(frameRef.current);
-        setDisplay(target);
-        setDone(true);
-        return;
-      }
-
-      setDisplay(
-        target
-          .split("")
-          .map((char, i) => {
-            if (i < revealed) return char;
-            if (char === " " || char === "@" || char === ".") return char;
-            return CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)];
-          })
-          .join("")
-      );
-    }, speed);
-
-    return () => clearInterval(frameRef.current);
-    // `done` and `blocks` intentionally excluded: `done` is set inside the
-    // interval and must not re-trigger the effect, or the reveal flashes and
-    // resets to blocks. `blocks` is derived from `target`.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, target, speed, scrambleCycles]);
-
-  // Reset function — call when config changes to go back to blocks
-  const reset = useCallback(() => {
-    clearInterval(frameRef.current);
-    setDisplay(blocks);
-    setDone(false);
-    tickRef.current = 0;
-  }, [blocks]);
-
-  return { display, done, reset };
-}
-
-// Config options with security ratings
-type ConfigOption = { value: string; secure: boolean; tag?: string };
-const CONFIG_OPTIONS: Record<string, ConfigOption[]> = {
-  protocol: [
-    { value: "TLS 1.3", secure: true },
-    { value: "TLS 1.2", secure: true },
-    { value: "QUIC", secure: true },
-    { value: "SSH-2", secure: true },
-    { value: "SSL 3.0", secure: false, tag: "DEPRECATED" },
-    { value: "TLS 1.0", secure: false, tag: "VULNERABLE" },
-  ],
-  cipher: [
-    { value: "AES-256-GCM", secure: true },
-    { value: "ChaCha20-Poly1305", secure: true },
-    { value: "AES-128-CBC", secure: true },
-    { value: "Camellia-256", secure: true },
-    { value: "RC4", secure: false, tag: "BROKEN" },
-    { value: "DES-CBC", secure: false, tag: "DEPRECATED" },
-    { value: "NULL", secure: false, tag: "NO ENCRYPTION" },
-  ],
-  key_exchange: [
-    { value: "X25519", secure: true },
-    { value: "P-384", secure: true },
-    { value: "RSA-4096", secure: true },
-    { value: "DH-2048", secure: true },
-    { value: "RSA-512", secure: false, tag: "BREAKABLE" },
-    { value: "DH-768", secure: false, tag: "WEAK" },
-    { value: "NULL", secure: false, tag: "NO KEY EXCHANGE" },
-  ],
-};
-
-// Check if a specific option value is secure
-function isOptionSecure(label: string, value: string): boolean {
-  const opts = CONFIG_OPTIONS[label];
-  if (!opts) return true;
-  const opt = opts.find((o) => o.value === value);
-  return opt ? opt.secure : true;
-}
-
 // Status line component — static (no dropdown)
 function StatusLine({ label, value, delay, active, isInsecure, phase }: { label: string; value: string; delay: number; active: boolean; isInsecure?: boolean; phase?: string }) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, x: -20 }}
       animate={active ? { opacity: 1, x: 0 } : {}}
       transition={{ delay, duration: 0.4 }}
@@ -187,7 +75,7 @@ function StatusLine({ label, value, delay, active, isInsecure, phase }: { label:
       }>
         {value}
       </span>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -204,7 +92,7 @@ function ConfigLine({
   onSelect,
 }: {
   label: string;
-  configKey: string;
+  configKey: ConfigKey;
   value: string;
   delay: number;
   active: boolean;
@@ -213,10 +101,10 @@ function ConfigLine({
   onToggle: () => void;
   onSelect: (val: string) => void;
 }) {
-  const options = CONFIG_OPTIONS[configKey] || [];
+  const options = CONFIG_OPTIONS[configKey];
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, x: -20 }}
       animate={active ? { opacity: 1, x: 0 } : {}}
       transition={{ delay, duration: 0.4 }}
@@ -262,6 +150,7 @@ function ConfigLine({
             <button
               key={opt.value}
               onClick={() => onSelect(opt.value)}
+              tabIndex={expanded ? undefined : -1}
               className={`px-2.5 py-1 rounded text-[11px] border transition-all duration-200 cursor-pointer inline-flex items-center gap-1.5 ${
                 opt.value === value
                   ? opt.secure
@@ -282,7 +171,7 @@ function ConfigLine({
           ))}
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -294,29 +183,26 @@ function ChannelCard({
   href,
   delay,
   active,
-  onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
-  href?: string;
+  href: string;
   delay: number;
   active: boolean;
-  onClick?: () => void;
 }) {
-  const Tag = href ? "a" : "button";
-  const linkProps = href
-    ? { href, target: href.startsWith("http") ? "_blank" : undefined, rel: href.startsWith("http") ? "noopener noreferrer" : undefined }
-    : { onClick };
+  const external = href.startsWith("http");
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 30, scale: 0.95 }}
       animate={active ? { opacity: 1, y: 0, scale: 1 } : {}}
       transition={{ delay, duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
     >
-      <Tag
-        {...(linkProps as Record<string, unknown>)}
+      <a
+        href={href}
+        target={external ? "_blank" : undefined}
+        rel={external ? "noopener noreferrer" : undefined}
         // Cards are rendered invisible (opacity 0) until the reveal — keep
         // them out of the tab order and unclickable until then.
         tabIndex={active ? undefined : -1}
@@ -342,8 +228,8 @@ function ChannelCard({
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
           </svg>
         </div>
-      </Tag>
-    </motion.div>
+      </a>
+    </m.div>
   );
 }
 
@@ -351,139 +237,59 @@ export function Contact() {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
   const reducedMotion = useReducedMotion();
-  const [phase, setPhase] = useState<"idle" | "scanning" | "decrypting" | "revealed" | "hacked">("idle");
+  const [state, dispatch] = useReducer(contactReducer, INITIAL_CONTACT_STATE);
+  const { phase, config, expandedLine, pendingChange, showConfigWarning } = state;
   const email = getEmail();
   const { isHacked, setHacked } = useHacked();
   const { revealEmail } = useContactReveal();
-  const { display: scrambledEmail, done: emailRevealed, reset: resetScramble } = useScrambleText(
-    email,
-    phase === "decrypting",
-    120
-  );
+  const { unlock } = useAchievements();
 
-  // Configurable status line state — empty by default (user must choose)
-  const [config, setConfig] = useState({
-    protocol: "",
-    cipher: "",
-    key_exchange: "",
+  const allConfigured = isConfigured(config);
+  const isSecure = isSecureConfig(config);
+  const critical = isCriticallyInsecure(config);
+  const isPendingInsecure = pendingChange
+    ? !isOptionSecure(pendingChange.key, pendingChange.value)
+    : false;
+
+  const scrambledEmail = useScramble(email, phase === "decrypting" ? "decrypt" : "blocks", {
+    speed: 120,
+    scrambleTicks: 12,
+    preserve: " @.",
+    onDone: () => dispatch({ type: "SCRAMBLE_DONE" }),
   });
-  const [showConfigWarning, setShowConfigWarning] = useState(false);
-  const [expandedLine, setExpandedLine] = useState<string | null>(null);
-  const warningTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const phaseTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const [pendingChange, setPendingChange] = useState<{ key: string; value: string } | null>(null);
 
-  // Check if all config options have been selected
-  const allConfigured = config.protocol !== "" && config.cipher !== "" && config.key_exchange !== "";
-
-  // Compute overall security state (only meaningful when all configured)
-  const isSecure = allConfigured &&
-    isOptionSecure("protocol", config.protocol) &&
-    isOptionSecure("cipher", config.cipher) &&
-    isOptionSecure("key_exchange", config.key_exchange);
-
-  // Count how many config options are insecure (ignore empty)
-  const insecureCount = [
-    config.protocol && !isOptionSecure("protocol", config.protocol),
-    config.cipher && !isOptionSecure("cipher", config.cipher),
-    config.key_exchange && !isOptionSecure("key_exchange", config.key_exchange),
-  ].filter(Boolean).length;
-  const isCriticallyInsecure = insecureCount >= 2;
-
-  // Check if the pending change would make things insecure
-  const isPendingInsecure = pendingChange ? !isOptionSecure(pendingChange.key, pendingChange.value) : false;
-
-  const handleToggleLine = useCallback((label: string) => {
-    setExpandedLine((prev) => (prev === label ? null : label));
-  }, []);
-
-  const handleSelectOption = useCallback((key: string, value: string) => {
-    if (value === config[key as keyof typeof config]) {
-      setExpandedLine(null);
-      return;
-    }
-    setPendingChange({ key, value });
-  }, [config]);
-
-  const handleConfirmChange = useCallback(() => {
-    if (!pendingChange) return;
-    setConfig({ ...config, [pendingChange.key]: pendingChange.value });
-    setPendingChange(null);
-    setExpandedLine(null);
-    // Reset decrypt so user has to re-decrypt with new config.
-    // Hacked state is intentionally preserved — it clears only on a successful
-    // decrypt through a secure config (see the reveal effect below).
-    if (phase !== "idle") {
-      setPhase("idle");
-      resetScramble();
-    }
-  }, [pendingChange, phase, resetScramble, config]);
-
-  const handleCancelChange = useCallback(() => {
-    setPendingChange(null);
-  }, []);
-
-  // Phase sequencing — scanning and decrypting triggered by user click
-  const handleDecrypt = useCallback(() => {
-    if (phase !== "idle") return;
-    setExpandedLine(null);
-
-    // If not all options are configured, show warning
-    if (!allConfigured) {
-      setShowConfigWarning(true);
-      clearTimeout(warningTimerRef.current);
-      warningTimerRef.current = setTimeout(() => setShowConfigWarning(false), 3000);
-      return;
-    }
-
-    // If currently hacked and config is no longer critically insecure, decrypt and revert
-    if (isHacked && !isCriticallyInsecure) {
-      setPhase("scanning");
-      clearTimeout(phaseTimerRef.current);
-      phaseTimerRef.current = setTimeout(() => setPhase("decrypting"), 1500);
-      return;
-    }
-
-    // If critically insecure, start decrypt then trigger hacked mode after 50ms
-    if (isCriticallyInsecure) {
-      setPhase("decrypting");
-      clearTimeout(phaseTimerRef.current);
-      phaseTimerRef.current = setTimeout(() => {
-        setPhase("hacked");
-        setHacked(true);
-        resetScramble();
-      }, 50);
-      return;
-    }
-
-    // Normal decrypt flow
-    setPhase("scanning");
-    clearTimeout(phaseTimerRef.current);
-    phaseTimerRef.current = setTimeout(() => setPhase("decrypting"), 1500);
-  }, [phase, allConfigured, isCriticallyInsecure, isHacked, setHacked, resetScramble]);
-
-  // Advance the state machine when the scramble animation finishes. This is a
-  // deliberate effect: it reacts to an async completion signal (emailRevealed)
-  // and must read the latest phase/isHacked, which the deps provide. A callback
-  // would capture stale values; deriving it would touch every render site.
+  // Timed transitions: scan dwell, and the near-instant breach when the user
+  // decrypts through a critically insecure config. Cleanup cancels the timer
+  // if the phase moves on (or the component unmounts) first.
   useEffect(() => {
-    if (emailRevealed && phase === "decrypting") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPhase("revealed");
-      if (isHacked) {
-        setHacked(false);
-      }
+    if (phase === "scanning") {
+      const t = setTimeout(() => dispatch({ type: "SCAN_COMPLETE" }), 1500);
+      return () => clearTimeout(t);
+    }
+    if (phase === "decrypting" && critical) {
+      const t = setTimeout(() => dispatch({ type: "BREACH_COMPLETE" }), 50);
+      return () => clearTimeout(t);
+    }
+  }, [phase, critical]);
+
+  // Auto-dismiss the "configure first" warning.
+  useEffect(() => {
+    if (!showConfigWarning) return;
+    const t = setTimeout(() => dispatch({ type: "HIDE_CONFIG_WARNING" }), 3000);
+    return () => clearTimeout(t);
+  }, [showConfigWarning]);
+
+  // Terminal phases drive the global hacked mode: a breach engages it; a
+  // successful decrypt through a secure config clears it and unmasks the
+  // email everywhere else (footer, command palette).
+  useEffect(() => {
+    if (phase === "hacked") setHacked(true);
+    if (phase === "revealed") {
+      setHacked(false);
       revealEmail();
+      unlock("decrypted_email");
     }
-  }, [emailRevealed, phase, isHacked, setHacked, revealEmail]);
-
-  // Cleanup timers on unmount
-  useEffect(() => {
-    return () => {
-      clearTimeout(warningTimerRef.current);
-      clearTimeout(phaseTimerRef.current);
-    };
-  }, []);
+  }, [phase, setHacked, revealEmail, unlock]);
 
   return (
     <section id="contact" className="section-padding" ref={sectionRef}>
@@ -496,7 +302,7 @@ export function Contact() {
 
         <div className="max-w-3xl mx-auto">
           {/* Main terminal card */}
-          <motion.div
+          <m.div
             variants={fadeUp}
             initial="hidden"
             whileInView="visible"
@@ -551,7 +357,7 @@ export function Contact() {
 
                 {/* Insecure channel warning banner */}
                 {allConfigured && !isSecure && (
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     className="mb-6 border border-red-400/20 bg-red-400/[0.04] rounded-lg px-4 py-3 flex items-start gap-3"
@@ -569,7 +375,7 @@ export function Contact() {
                         Proceed at your own risk.
                       </p>
                     </div>
-                  </motion.div>
+                  </m.div>
                 )}
 
                 {/* Status lines */}
@@ -582,8 +388,8 @@ export function Contact() {
                     active={isInView}
                     expanded={expandedLine === "protocol"}
                     isInsecure={config.protocol !== "" && !isOptionSecure("protocol", config.protocol)}
-                    onToggle={() => handleToggleLine("protocol")}
-                    onSelect={(v) => handleSelectOption("protocol", v)}
+                    onToggle={() => dispatch({ type: "TOGGLE_LINE", key: "protocol" })}
+                    onSelect={(value) => dispatch({ type: "SELECT_OPTION", key: "protocol", value })}
                   />
                   <ConfigLine
                     label="Cipher"
@@ -593,8 +399,8 @@ export function Contact() {
                     active={isInView}
                     expanded={expandedLine === "cipher"}
                     isInsecure={config.cipher !== "" && !isOptionSecure("cipher", config.cipher)}
-                    onToggle={() => handleToggleLine("cipher")}
-                    onSelect={(v) => handleSelectOption("cipher", v)}
+                    onToggle={() => dispatch({ type: "TOGGLE_LINE", key: "cipher" })}
+                    onSelect={(value) => dispatch({ type: "SELECT_OPTION", key: "cipher", value })}
                   />
                   <ConfigLine
                     label="Key Exchange"
@@ -604,8 +410,8 @@ export function Contact() {
                     active={isInView}
                     expanded={expandedLine === "key_exchange"}
                     isInsecure={config.key_exchange !== "" && !isOptionSecure("key_exchange", config.key_exchange)}
-                    onToggle={() => handleToggleLine("key_exchange")}
-                    onSelect={(v) => handleSelectOption("key_exchange", v)}
+                    onToggle={() => dispatch({ type: "TOGGLE_LINE", key: "key_exchange" })}
+                    onSelect={(value) => dispatch({ type: "SELECT_OPTION", key: "key_exchange", value })}
                   />
                   <StatusLine
                     label="Identity"
@@ -629,7 +435,7 @@ export function Contact() {
 
                 {/* Confirm change modal */}
                 {pendingChange && (
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="mb-8 mx-auto max-w-sm"
@@ -666,7 +472,7 @@ export function Contact() {
                       )}
                       <div className="flex items-center justify-center gap-3">
                         <button
-                          onClick={handleConfirmChange}
+                          onClick={() => dispatch({ type: "CONFIRM_CHANGE" })}
                           className={`px-4 py-1.5 font-mono text-[11px] tracking-wider border rounded transition-colors cursor-pointer ${
                             isPendingInsecure
                               ? "text-red-400 border-red-400/30 bg-red-400/[0.05] hover:bg-red-400/10"
@@ -676,25 +482,30 @@ export function Contact() {
                           {isPendingInsecure ? "PROCEED ANYWAY" : "CONFIRM"}
                         </button>
                         <button
-                          onClick={handleCancelChange}
+                          onClick={() => dispatch({ type: "CANCEL_CHANGE" })}
                           className="px-4 py-1.5 font-mono text-[11px] tracking-wider text-subtle border border-white/10 rounded hover:text-foreground hover:border-white/20 transition-colors cursor-pointer"
                         >
                           CANCEL
                         </button>
                       </div>
                     </div>
-                  </motion.div>
+                  </m.div>
                 )}
 
                 {/* The big email reveal */}
                 <div className="text-center mb-10">
+                  {/* Screen readers hear only scramble noise during the
+                      animation — announce the real address once resolved. */}
+                  <span className="sr-only" role="status">
+                    {phase === "revealed" ? `Email address revealed: ${email}` : ""}
+                  </span>
                   {phase === "idle" ? (
                     /* Decrypt button — shown before user initiates */
                     <div>
                       <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-subtle mb-6">
                         {isHacked
                           ? "/// system compromised ///"
-                          : isCriticallyInsecure
+                          : critical
                           ? "/// critical vulnerability detected ///"
                           : "/// encrypted transmission ready ///"}
                       </p>
@@ -703,7 +514,7 @@ export function Contact() {
                       </span>
 
                       <button
-                        onClick={handleDecrypt}
+                        onClick={() => dispatch({ type: "DECRYPT_PRESSED" })}
                         className={`inline-flex items-center gap-2.5 px-6 py-3 font-mono text-sm tracking-wider border rounded-lg active:scale-95 transition-all duration-300 cursor-pointer ${
                           isHacked
                             ? "text-emerald-400 border-emerald-400/30 bg-emerald-400/[0.05] hover:bg-emerald-400/10 hover:border-emerald-400/50"
@@ -718,19 +529,18 @@ export function Contact() {
 
                       {/* Config warning */}
                       {showConfigWarning && (
-                        <motion.p
+                        <m.p
                           initial={{ opacity: 0, y: 5 }}
                           animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
                           className="mt-4 font-mono text-[11px] text-amber-400 tracking-wider"
                         >
                           Configure all parameters above before decrypting
-                        </motion.p>
+                        </m.p>
                       )}
                     </div>
                   ) : phase === "hacked" ? (
                     /* Hacked / policy violation state */
-                    <motion.div
+                    <m.div
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.3 }}
@@ -762,11 +572,11 @@ export function Contact() {
                           HINT: Change settings above to recommended values, then decrypt again.
                         </p>
                       </div>
-                    </motion.div>
+                    </m.div>
                   ) : (
                     /* Scanning / Decrypting / Revealed states */
                     <div>
-                      <motion.p
+                      <m.p
                         key={phase}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -776,7 +586,7 @@ export function Contact() {
                         {phase === "scanning" && "/// scanning for signal ///"}
                         {phase === "decrypting" && "/// decrypting message ///"}
                         {phase === "revealed" && "/// signal established ///"}
-                      </motion.p>
+                      </m.p>
 
                       <div className="relative inline-block max-w-full">
                         {phase === "revealed" && (
@@ -810,7 +620,7 @@ export function Contact() {
                         )}
                       </div>
 
-                      <motion.div
+                      <m.div
                         initial={{ scaleX: 0 }}
                         animate={phase === "revealed" ? { scaleX: 1 } : {}}
                         transition={{ delay: 0.3, duration: 0.8, ease: [0.25, 0.1, 0.25, 1] as const }}
@@ -821,7 +631,7 @@ export function Contact() {
                 </div>
 
                 {/* Access granted badge */}
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={phase === "revealed" ? { opacity: 1, scale: 1 } : {}}
                   transition={{ delay: 0.5, type: "spring", stiffness: 150, damping: 20 }}
@@ -832,7 +642,7 @@ export function Contact() {
                     access granted
                   </span>
                   <div className="h-[1px] w-8 bg-emerald-400/30" />
-                </motion.div>
+                </m.div>
 
                 {/* Channel cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg mx-auto">
@@ -864,7 +674,7 @@ export function Contact() {
                 </div>
               </div>
             </GlassPanel>
-          </motion.div>
+          </m.div>
         </div>
       </div>
     </section>

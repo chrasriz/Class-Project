@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useCallback, type ReactNode, type MouseEvent } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface MagneticButtonProps {
@@ -45,7 +45,7 @@ export function MagneticButton({
 
   return (
     <a href={href}>
-      <motion.div
+      <m.div
         ref={ref}
         onMouseMove={handleMouse}
         onMouseLeave={reset}
@@ -58,7 +58,7 @@ export function MagneticButton({
         )}
       >
         {children}
-      </motion.div>
+      </m.div>
     </a>
   );
 }

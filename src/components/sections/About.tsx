@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { CERTIFICATIONS, EXPERIENCE } from "@/lib/constants";
 import { fadeUp, staggerContainer } from "@/lib/animations";
 import { HackedOverlay } from "@/components/ui/HackedOverlay";
 import { useEscape } from "@/hooks/useEscape";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 const STATS = [
   { value: "200+", label: "IT Issues Resolved", clickable: false },
@@ -27,11 +28,12 @@ type ModalType = "certs" | "experience" | null;
 
 function DetailModal({ type, onClose }: { type: NonNullable<ModalType>; onClose: () => void }) {
   useEscape(true, onClose);
+  const trapRef = useFocusTrap<HTMLDivElement>(true);
 
   const workExperience = EXPERIENCE.filter((e) => e.type === "work");
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -42,7 +44,8 @@ function DetailModal({ type, onClose }: { type: NonNullable<ModalType>; onClose:
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       {/* Modal */}
-      <motion.div
+      <m.div
+        ref={trapRef}
         role="dialog"
         aria-modal="true"
         aria-label={type === "certs" ? "Certifications" : "Work experience"}
@@ -110,8 +113,8 @@ function DetailModal({ type, onClose }: { type: NonNullable<ModalType>; onClose:
             </>
           )}
         </GlassPanel>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }
 
@@ -130,7 +133,7 @@ export function About() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
           {/* Story */}
-          <motion.div
+          <m.div
             variants={fadeUp}
             initial="hidden"
             whileInView="visible"
@@ -153,10 +156,10 @@ export function About() {
               Assistant at the Lassonde School of Engineering, and I thrive where technology meets
               real-world problem solving.
             </p>
-          </motion.div>
+          </m.div>
 
           {/* Stats Grid */}
-          <motion.div
+          <m.div
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
@@ -189,11 +192,11 @@ export function About() {
                 )}
               </GlassPanel>
             ))}
-          </motion.div>
+          </m.div>
         </div>
 
         {/* Traits */}
-        <motion.div
+        <m.div
           variants={staggerContainer}
           initial="hidden"
           whileInView="visible"
@@ -201,7 +204,7 @@ export function About() {
           className="grid grid-cols-1 md:grid-cols-2 gap-4"
         >
           {TRAITS.map((trait) => (
-            <motion.div key={trait.title} variants={fadeUp}>
+            <m.div key={trait.title} variants={fadeUp}>
               <GlassPanel variant="subtle" className="p-6">
                 <h3 className="text-base font-semibold text-foreground mb-2">
                   {trait.title}
@@ -210,9 +213,9 @@ export function About() {
                   {trait.description}
                 </p>
               </GlassPanel>
-            </motion.div>
+            </m.div>
           ))}
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Detail Modal — AnimatePresence must wrap the conditional so the exit

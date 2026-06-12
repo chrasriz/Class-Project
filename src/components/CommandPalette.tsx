@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { NAV_ITEMS, SITE_CONFIG, getEmail } from "@/lib/constants";
 import { useHacked } from "@/lib/hacked-context";
 import { useContactReveal } from "@/lib/contact-reveal-context";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 type Command = {
   id: string;
@@ -13,13 +14,14 @@ type Command = {
   run: () => void;
 };
 
-export function CommandPalette() {
+export function CommandPalette({ onOpenTerminal }: { onOpenTerminal: () => void }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  // Focuses the search input (first focusable) on open, restores on close.
+  const trapRef = useFocusTrap<HTMLDivElement>(open);
   const { isHacked, setHacked } = useHacked();
   const { emailRevealed } = useContactReveal();
 
@@ -88,13 +90,19 @@ export function CommandPalette() {
         run: () => window.open(SITE_CONFIG.socials.linkedin, "_blank", "noopener,noreferrer"),
       },
       {
+        id: "terminal",
+        label: "Open terminal",
+        hint: "`",
+        run: onOpenTerminal,
+      },
+      {
         id: "hacked",
         label: isHacked ? "Restore system integrity" : "Breach system",
         hint: isHacked ? "Restore" : "⚠ run",
         run: () => setHacked(!isHacked),
       },
     ];
-  }, [isHacked, setHacked, showToast, emailRevealed]);
+  }, [isHacked, setHacked, showToast, emailRevealed, onOpenTerminal]);
 
   const filtered = useMemo(
     () => commands.filter((cmd) => cmd.label.toLowerCase().includes(query.toLowerCase())),
@@ -119,10 +127,6 @@ export function CommandPalette() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
-
-  useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 50);
-  }, [open]);
 
   // Keep the highlighted item scrolled into view.
   useEffect(() => {
@@ -152,7 +156,7 @@ export function CommandPalette() {
     <>
       <AnimatePresence>
         {open && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -160,7 +164,8 @@ export function CommandPalette() {
             className="fixed inset-0 z-[60] flex items-start justify-center pt-[20vh] bg-black/60 backdrop-blur-sm"
             onClick={() => setOpen(false)}
           >
-            <motion.div
+            <m.div
+              ref={trapRef}
               initial={{ opacity: 0, scale: 0.96, y: -10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: -10 }}
@@ -177,7 +182,6 @@ export function CommandPalette() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                 </svg>
                 <input
-                  ref={inputRef}
                   type="text"
                   value={query}
                   onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
@@ -233,15 +237,15 @@ export function CommandPalette() {
                 <span>↵ select</span>
                 <span className="ml-auto">⌘K toggle</span>
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
 
       {/* Toast (persists briefly after the palette closes) */}
       <AnimatePresence>
         {toast && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
@@ -249,7 +253,7 @@ export function CommandPalette() {
             role="status"
           >
             {toast}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </>

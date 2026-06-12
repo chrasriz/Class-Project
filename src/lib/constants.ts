@@ -26,49 +26,53 @@ export const NAV_ITEMS = [
   { label: "Contact", href: "#contact" },
 ] as const;
 
-export const SKILLS = [
+// Proficiency tiers instead of self-assigned percentages: core (daily-driver
+// depth), advanced (independent, production-grade), working (solid grounding).
+export type SkillTier = "core" | "advanced" | "working";
+
+export const SKILLS: { category: string; items: { name: string; tier: SkillTier }[] }[] = [
   {
     category: "Security Operations",
     items: [
-      { name: "Malware Analysis", level: 88 },
-      { name: "Threat Intelligence & Hunting", level: 85 },
-      { name: "Incident Response", level: 87 },
-      { name: "SIEM (Splunk, QRadar, Sentinel)", level: 90 },
-      { name: "MITRE ATT&CK / OSINT", level: 86 },
-      { name: "Digital Forensics", level: 82 },
+      { name: "SIEM (Splunk, QRadar, Sentinel)", tier: "core" },
+      { name: "Malware Analysis", tier: "core" },
+      { name: "Incident Response", tier: "advanced" },
+      { name: "MITRE ATT&CK / OSINT", tier: "advanced" },
+      { name: "Threat Intelligence & Hunting", tier: "advanced" },
+      { name: "Digital Forensics", tier: "working" },
     ],
   },
   {
     category: "Network Security",
     items: [
-      { name: "VLAN Segmentation & ACLs", level: 92 },
-      { name: "Firewalls & VPNs", level: 90 },
-      { name: "Secure Protocols (HTTPS, SSH, IPSec)", level: 91 },
-      { name: "OSPF / EIGRP / NAT / DHCP", level: 88 },
-      { name: "IDS/IPS", level: 89 },
-      { name: "Wireless Security", level: 85 },
+      { name: "VLAN Segmentation & ACLs", tier: "core" },
+      { name: "Secure Protocols (HTTPS, SSH, IPSec)", tier: "core" },
+      { name: "Firewalls & VPNs", tier: "core" },
+      { name: "IDS/IPS", tier: "core" },
+      { name: "OSPF / EIGRP / NAT / DHCP", tier: "core" },
+      { name: "Wireless Security", tier: "advanced" },
     ],
   },
   {
     category: "Access & Compliance",
     items: [
-      { name: "IAM & MFA (Duo)", level: 92 },
-      { name: "Zero Trust Architecture", level: 85 },
-      { name: "Privileged Access Management", level: 83 },
-      { name: "ISO 27001 / NIST CSF", level: 84 },
-      { name: "GDPR / HIPAA / PCI-DSS", level: 82 },
-      { name: "Risk Assessment", level: 86 },
+      { name: "IAM & MFA (Duo)", tier: "core" },
+      { name: "Risk Assessment", tier: "advanced" },
+      { name: "Zero Trust Architecture", tier: "advanced" },
+      { name: "ISO 27001 / NIST CSF", tier: "advanced" },
+      { name: "Privileged Access Management", tier: "working" },
+      { name: "GDPR / HIPAA / PCI-DSS", tier: "working" },
     ],
   },
   {
     category: "Infrastructure & Tools",
     items: [
-      { name: "Linux Administration", level: 88 },
-      { name: "Endpoint Detection & Response", level: 85 },
-      { name: "Nessus / OpenVAS / Nmap", level: 87 },
-      { name: "Penetration Testing", level: 84 },
-      { name: "Patch Management & Hardening", level: 86 },
-      { name: "Cryptography & PKI", level: 83 },
+      { name: "Linux Administration", tier: "core" },
+      { name: "Nessus / OpenVAS / Nmap", tier: "advanced" },
+      { name: "Patch Management & Hardening", tier: "advanced" },
+      { name: "Endpoint Detection & Response", tier: "advanced" },
+      { name: "Penetration Testing", tier: "advanced" },
+      { name: "Cryptography & PKI", tier: "working" },
     ],
   },
 ];

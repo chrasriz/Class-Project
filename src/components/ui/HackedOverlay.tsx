@@ -1,29 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useHacked } from "@/lib/hacked-context";
-import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { CIPHER_CHARS, useScramble } from "@/lib/scramble";
 
-const CIPHER_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*!?<>{}[]=/\\|~^█▓▒░";
-
-function useRandomText(length: number, active: boolean) {
-  const [text, setText] = useState("");
-
-  useEffect(() => {
-    if (!active) return;
-    const generate = () =>
-      Array.from({ length }, () => CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)]).join("");
-    const id = setInterval(() => setText(generate()), 120);
-    return () => clearInterval(id);
-  }, [active, length]);
-
-  return text;
-}
+// Deterministic glyph row: the loop scrambles it while hacked; reduced-motion
+// users see it as-is (static decoration instead of empty space).
+const GLYPH_ROW = Array.from(
+  { length: 80 },
+  (_, i) => CIPHER_CHARS[(i * 7) % CIPHER_CHARS.length]
+).join("");
 
 export function HackedOverlay() {
   const { isHacked } = useHacked();
-  const reducedMotion = useReducedMotion();
-  const scrambled = useRandomText(80, isHacked && !reducedMotion);
+  const scrambled = useScramble(GLYPH_ROW, isHacked ? "loop" : "text", { speed: 120 });
 
   if (!isHacked) return null;
 
