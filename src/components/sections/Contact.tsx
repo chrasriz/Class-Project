@@ -317,7 +317,13 @@ function ChannelCard({
     >
       <Tag
         {...(linkProps as Record<string, unknown>)}
-        className="group block w-full text-left glass-card p-5 hover:border-cyan/30 transition-all duration-300 cursor-pointer"
+        // Cards are rendered invisible (opacity 0) until the reveal — keep
+        // them out of the tab order and unclickable until then.
+        tabIndex={active ? undefined : -1}
+        aria-hidden={!active}
+        className={`group block w-full text-left glass-card p-5 hover:border-cyan/30 transition-all duration-300 cursor-pointer ${
+          active ? "" : "pointer-events-none"
+        }`}
       >
         <div className="flex items-center gap-4">
           <div className="w-11 h-11 rounded-xl bg-cyan-dim flex items-center justify-center shrink-0 group-hover:shadow-[0_0_20px_rgba(6,182,212,0.2)] transition-shadow duration-300">

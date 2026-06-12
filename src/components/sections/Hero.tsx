@@ -53,7 +53,6 @@ export function Hero() {
             key={titleIndex}
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -30, opacity: 0 }}
             transition={{ duration: 0.5 }}
             className="text-lg md:text-xl text-cyan font-mono tracking-wide"
           >

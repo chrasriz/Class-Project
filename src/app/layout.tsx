@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import { SITE_CONFIG } from "@/lib/constants";
 import "./globals.css";
 
 const sans = localFont({
@@ -9,6 +10,9 @@ const sans = localFont({
       style: "normal",
     },
   ],
+  // Variable fonts: declare the full axis so bold weights use the real font
+  // instead of browser-synthesized bold.
+  weight: "100 900",
   variable: "--font-geist-sans",
   display: "swap",
   fallback: [
@@ -31,6 +35,7 @@ const mono = localFont({
       style: "normal",
     },
   ],
+  weight: "100 900",
   variable: "--font-geist-mono",
   display: "swap",
   fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "monospace"],
@@ -42,11 +47,13 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+const SHORT_DESCRIPTION =
+  "Cybersecurity Analyst specializing in SOC operations, network security, and access hardening.";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://chrasriz.com"),
-  title: "Rasikh Rizwan | Cybersecurity Analyst",
-  description:
-    "Portfolio of Chaudhry Rasikh Rizwan, Cybersecurity Analyst and IT Professional based in Toronto, Canada. Specializing in SOC operations, network security, and access hardening.",
+  metadataBase: new URL(SITE_CONFIG.url),
+  title: SITE_CONFIG.title,
+  description: SITE_CONFIG.description,
   keywords: [
     "cybersecurity",
     "security analyst",
@@ -63,17 +70,15 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_CA",
-    url: "https://chrasriz.com",
-    title: "Rasikh Rizwan | Cybersecurity Analyst",
-    description:
-      "Cybersecurity Analyst specializing in SOC operations, network security, and access hardening.",
+    url: SITE_CONFIG.url,
+    title: SITE_CONFIG.title,
+    description: SHORT_DESCRIPTION,
     siteName: "Rasikh Rizwan Portfolio",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Rasikh Rizwan | Cybersecurity Analyst",
-    description:
-      "Cybersecurity Analyst specializing in SOC operations, network security, and access hardening.",
+    title: SITE_CONFIG.title,
+    description: SHORT_DESCRIPTION,
   },
   robots: {
     index: true,
@@ -86,7 +91,7 @@ const personJsonLd = {
   "@type": "Person",
   name: "Chaudhry Rasikh Rizwan",
   alternateName: "Rasikh Rizwan",
-  url: "https://chrasriz.com",
+  url: SITE_CONFIG.url,
   jobTitle: "Cybersecurity Analyst",
   address: {
     "@type": "PostalAddress",
@@ -94,7 +99,7 @@ const personJsonLd = {
     addressRegion: "ON",
     addressCountry: "CA",
   },
-  sameAs: ["https://www.linkedin.com/in/ch-rasikh-rizwan/"],
+  sameAs: [SITE_CONFIG.socials.linkedin],
 };
 
 export default function RootLayout({

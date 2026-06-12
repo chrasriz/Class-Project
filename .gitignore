@@ -34,13 +34,6 @@ yarn-error.log*
 # vercel
 .vercel
 
-# runtime data
-/data/status.json
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# old portfolio subfolder build artifacts
-portfolio/.next/
-portfolio/node_modules/

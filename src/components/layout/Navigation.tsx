@@ -60,6 +60,9 @@ export function Navigation() {
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
+    // Sync once on mount — the browser restores scroll position on reload
+    // without firing a scroll event.
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);

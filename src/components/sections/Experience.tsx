@@ -94,10 +94,8 @@ export function Experience() {
                   </p>
                   <span
                     className={`inline-block mt-3 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider rounded ${
-                      style.label === "Work"
+                      item.type === "work"
                         ? "text-cyan bg-cyan-dim"
-                        : style.label === "Certification"
-                        ? "text-amber-400 bg-amber-400/10"
                         : "text-violet-400 bg-violet-400/10"
                     }`}
                   >

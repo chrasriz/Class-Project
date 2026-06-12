@@ -25,97 +25,93 @@ const TRAITS = [
 
 type ModalType = "certs" | "experience" | null;
 
-function DetailModal({ type, onClose }: { type: ModalType; onClose: () => void }) {
-  useEscape(type !== null, onClose);
-
-  if (!type) return null;
+function DetailModal({ type, onClose }: { type: NonNullable<ModalType>; onClose: () => void }) {
+  useEscape(true, onClose);
 
   const workExperience = EXPERIENCE.filter((e) => e.type === "work");
 
   return (
-    <AnimatePresence>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
+      {/* Modal */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        onClick={onClose}
+        role="dialog"
+        aria-modal="true"
+        aria-label={type === "certs" ? "Certifications" : "Work experience"}
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-lg z-10"
       >
-        {/* Backdrop */}
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+        <GlassPanel variant="card" className="p-6 sm:p-8">
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-8 h-8 rounded-lg border border-border flex items-center justify-center text-muted hover:text-foreground hover:border-border-hover transition-all"
+            aria-label="Close"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
 
-        {/* Modal */}
-        <motion.div
-          role="dialog"
-          aria-modal="true"
-          aria-label={type === "certs" ? "Certifications" : "Work experience"}
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-lg z-10"
-        >
-          <GlassPanel variant="card" className="p-6 sm:p-8">
-            {/* Close button */}
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 w-8 h-8 rounded-lg border border-border flex items-center justify-center text-muted hover:text-foreground hover:border-border-hover transition-all"
-              aria-label="Close"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            {type === "certs" ? (
-              <>
-                <h3 className="text-lg font-semibold text-foreground mb-1">Certifications</h3>
-                <p className="text-xs text-muted mb-6">Active industry certifications</p>
-                <div className="space-y-4">
-                  {CERTIFICATIONS.map((cert) => (
-                    <div
-                      key={cert.name}
-                      className="flex items-start justify-between gap-4 p-4 rounded-lg bg-white/[0.03] border border-border"
-                    >
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{cert.name}</p>
-                        <p className="text-xs text-muted mt-0.5">{cert.issuer}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <span className="inline-block px-2 py-0.5 text-[10px] font-mono text-emerald-400 bg-emerald-400/10 rounded">
-                          {cert.status}
-                        </span>
-                        <p className="text-xs text-subtle mt-1">{cert.year}</p>
-                      </div>
+          {type === "certs" ? (
+            <>
+              <h3 className="text-lg font-semibold text-foreground mb-1">Certifications</h3>
+              <p className="text-xs text-muted mb-6">Active industry certifications</p>
+              <div className="space-y-4">
+                {CERTIFICATIONS.map((cert) => (
+                  <div
+                    key={cert.name}
+                    className="flex items-start justify-between gap-4 p-4 rounded-lg bg-white/[0.03] border border-border"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{cert.name}</p>
+                      <p className="text-xs text-muted mt-0.5">{cert.issuer}</p>
                     </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <>
-                <h3 className="text-lg font-semibold text-foreground mb-1">Work Experience</h3>
-                <p className="text-xs text-muted mb-6">Professional roles and positions</p>
-                <div className="space-y-4">
-                  {workExperience.map((exp) => (
-                    <div
-                      key={exp.title}
-                      className="p-4 rounded-lg bg-white/[0.03] border border-border"
-                    >
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <p className="text-sm font-medium text-foreground">{exp.title}</p>
-                        <span className="text-[11px] font-mono text-cyan shrink-0">{exp.period}</span>
-                      </div>
-                      <p className="text-xs text-muted">{exp.organization}</p>
+                    <div className="text-right shrink-0">
+                      <span className="inline-block px-2 py-0.5 text-[10px] font-mono text-emerald-400 bg-emerald-400/10 rounded">
+                        {cert.status}
+                      </span>
+                      <p className="text-xs text-subtle mt-1">{cert.year}</p>
                     </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </GlassPanel>
-        </motion.div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <h3 className="text-lg font-semibold text-foreground mb-1">Work Experience</h3>
+              <p className="text-xs text-muted mb-6">Professional roles and positions</p>
+              <div className="space-y-4">
+                {workExperience.map((exp) => (
+                  <div
+                    key={exp.title}
+                    className="p-4 rounded-lg bg-white/[0.03] border border-border"
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <p className="text-sm font-medium text-foreground">{exp.title}</p>
+                      <span className="text-[11px] font-mono text-cyan shrink-0">{exp.period}</span>
+                    </div>
+                    <p className="text-xs text-muted">{exp.organization}</p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </GlassPanel>
       </motion.div>
-    </AnimatePresence>
+    </motion.div>
   );
 }
 
@@ -219,10 +215,13 @@ export function About() {
         </motion.div>
       </div>
 
-      {/* Detail Modal */}
-      {activeModal && (
-        <DetailModal type={activeModal} onClose={() => setActiveModal(null)} />
-      )}
+      {/* Detail Modal — AnimatePresence must wrap the conditional so the exit
+          animation plays when the modal unmounts */}
+      <AnimatePresence>
+        {activeModal && (
+          <DetailModal type={activeModal} onClose={() => setActiveModal(null)} />
+        )}
+      </AnimatePresence>
     </section>
   );
 }
